@@ -19,4 +19,20 @@
 
 (defn -main
   [& args]
-  (help))
+  (let [conn (nrepl/connect :port (nrepl-port))
+        client (nrepl/client conn 60000)
+        session (nrepl/client-session client)
+        msg-seq (session {:op "eval" :code (apply str args)})]
+    (loop [[{:keys [status value out err]} & msgs] msg-seq]
+      (when out
+        (print out))
+      (when err
+        (binding [*out* *err*]
+          (print err)))
+      (when value
+        (println value))
+      (when-not (contains? (into #{} status) "done")
+        (recur msgs)))
+    (let [^java.io.Closeable cc conn]
+      (.close cc)))
+  (System/exit 0))
