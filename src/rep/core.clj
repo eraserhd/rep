@@ -5,7 +5,8 @@
 
 (defn- nrepl-port
   []
-  (Long/parseLong (slurp ".nrepl-port")))
+  (let [dir (System/getProperty "user.dir")]
+    (Long/parseLong (slurp (str dir "/.nrepl-port")))))
 
 (defn- help
   []
@@ -17,7 +18,7 @@
   (println)
   (System/exit 0))
 
-(defn -main
+(defn rep
   [& args]
   (let [conn (nrepl/connect :port (nrepl-port))
         client (nrepl/client conn 60000)
@@ -34,5 +35,8 @@
       (when-not (contains? (into #{} status) "done")
         (recur msgs)))
     (let [^java.io.Closeable cc conn]
-      (.close cc)))
-  (System/exit 0))
+      (.close cc))))
+
+(defn -main
+  [& args]
+  (System/exit (apply rep args)))
