@@ -25,9 +25,15 @@
         (System/setProperty "user.dir" starting-dir)
         (nrepl.server/stop-server server)))))
 
-(facts "about basic evaluation of code"
-  (rep "(+ 2 2)") => (contains {:stdout "4\n"})
-  (rep "(+ 1 1)") => (contains {:exit-code 0})
-  (rep "(println 'hello)") => (contains {:stdout "hello\nnil\n"})
-  (rep "(.write ^java.io.Writer *err* \"error\")") => (contains {:stderr "error"}))
+(defn- prints [s & flags]
+  (let [flags (into #{} flags)
+        k (if (flags :to-stderr)
+            :stderr
+            :stdout)]
+    (contains {k s})))
 
+(facts "about basic evaluation of code"
+  (rep "(+ 2 2)")                                  => (prints "4\n")
+  (rep "(+ 1 1)")                                  => (contains {:exit-code 0})
+  (rep "(println 'hello)")                         => (prints "hello\nnil\n")
+  (rep "(.write ^java.io.Writer *err* \"error\")") => (prints "error" :to-stderr))
