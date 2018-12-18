@@ -18,7 +18,6 @@
   (println)
   (System/exit 0))
 
-
 (defn- take-until
   "Transducer like take-while, except keeps the last value tested."
   [pred]

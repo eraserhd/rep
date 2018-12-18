@@ -1,0 +1,28 @@
+= rep
+
+A single-shot nREPL client designed for shell invocation.
+
+== Installation
+
+Download from http://example.com/FIXME.
+
+== Usage
+
+FIXME: explanation
+
+ $ java -jar rep-0.1.0-standalone.jar [args]
+
+== Options
+
+FIXME: listing of options this app accepts.
+
+== Examples
+
+ $ rep "(+ 2 2)"
+
+== License
+
+Copyright © 2018 Jason M. Felice
+
+Distributed under the Eclipse Public License either version 1.0 or (at
+your option) any later version.
