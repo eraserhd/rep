@@ -40,4 +40,5 @@
   (rep "(+ 1 1)")                                  => (exits-with 0)
   (rep "(println 'hello)")                         => (prints "hello\nnil\n")
   (rep "(.write ^java.io.Writer *err* \"error\")") => (prints "error" :to-stderr)
-  (rep "(throw (ex-info \"x\" {}))")               => (prints #"ExceptionInfo" :to-stderr))
+  (rep "(throw (ex-info \"x\" {}))")               => (prints #"ExceptionInfo" :to-stderr)
+  (rep "(throw (ex-info \"x\" {}))")               => (exits-with 1))

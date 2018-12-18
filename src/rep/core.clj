@@ -55,6 +55,16 @@
     (.write w s)
     (.flush w)))
 
+(defn- report-exceptions
+  [rf]
+  (fn
+    ([] (rf))
+    ([result] (rf result))
+    ([result input]
+     (cond-> result
+       (contains? input :ex)
+       (assoc :exit-code 1)))))
+
 (defn- null-reducer
   "A reducing function which does nothing."
   ([] nil)
@@ -66,18 +76,20 @@
   (let [conn (nrepl/connect :port (nrepl-port))
         client (nrepl/client conn 60000)
         session (nrepl/client-session client)
-        msg-seq (session {:op "eval" :code (apply str args)})]
-    (transduce
-      (comp
-        (until-status "done")
-        (effecting :out print)
-        (effecting :err print-err)
-        (effecting :value println))
-      null-reducer
-      msg-seq)
-    (let [^java.io.Closeable cc conn]
-      (.close cc))
-    0))
+        msg-seq (session {:op "eval" :code (apply str args)})
+        result (transduce
+                 (comp
+                   (until-status "done")
+                   (effecting :out print)
+                   (effecting :err print-err)
+                   (effecting :value println)
+                   report-exceptions)
+                 null-reducer
+                 {:exit-code 0}
+                 msg-seq)
+        ^java.io.Closeable cc conn]
+    (.close cc)
+    (:exit-code result)))
 
 (defn -main
   [& args]
