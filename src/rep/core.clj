@@ -47,8 +47,11 @@
          (effect-fn (get input k)))
        (rf result input)))))
 
-(def ^:private print-output (effecting :out print))
-(def ^:private print-values (effecting :value println))
+(defn- print-err
+  [^String s]
+  (let [^java.io.Writer w *err*]
+    (.write w s)
+    (.flush w)))
 
 (defn- null-reducer
   "A reducing function which does nothing."
@@ -65,8 +68,9 @@
     (transduce
       (comp
         (take-until #(contains-status? % "done"))
-        print-output
-        print-values)
+        (effecting :out print)
+        (effecting :err print-err)
+        (effecting :value println))
       null-reducer
       msg-seq)
     (let [^java.io.Closeable cc conn]
