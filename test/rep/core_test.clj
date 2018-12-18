@@ -14,9 +14,10 @@
       (System/setProperty "user.dir" (str starting-dir "/target"))
       (spit (str starting-dir "/target/.nrepl-port") (str (:port server)))
       (let [out (ByteArrayOutputStream.)]
-        (binding [*out* (OutputStreamWriter. out)]
-          (apply rep.core/rep args))
-        {:out (.toString out)})
+        (let [exit-code (binding [*out* (OutputStreamWriter. out)]
+                          (apply rep.core/rep args))]
+          {:out (.toString out)
+           :exit-code exit-code}))
       (finally
         (System/setProperty "user.dir" starting-dir)
         (nrepl.server/stop-server server)))))
@@ -24,4 +25,6 @@
 (deftest t-rep
   (testing "basic evaluation of code"
     (is (= "4\n" (:out (rep "(+ 2 2)")))
-      "non-option arguments are evaluated")))
+      "non-option arguments are evaluated")
+    (is (= 0 (:exit-code (rep "(+ 2 2)")))
+      "exits with zero")))
