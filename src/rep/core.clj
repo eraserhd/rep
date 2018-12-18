@@ -35,7 +35,8 @@
       (when-not (contains? (into #{} status) "done")
         (recur msgs)))
     (let [^java.io.Closeable cc conn]
-      (.close cc))))
+      (.close cc))
+    0))
 
 (defn -main
   [& args]
