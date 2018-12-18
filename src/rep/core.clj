@@ -35,27 +35,20 @@
           (pred input)      (reduced result)
           :else             result))))))
 
-(defn- print-output
-  "Effectful transducer which echoes things printed to *out*."
-  [rf]
-  (fn
-    ([] (rf))
-    ([result] (rf result))
-    ([result input]
-     (when-some [out (:out input)]
-       (print out))
-     (rf result input))))
+(defn- effecting
+  "Build an effectful transucer which operates on the `k` value in messages."
+  [k effect-fn]
+  (fn [rf]
+    (fn
+      ([] (rf))
+      ([result] (rf result))
+      ([result input]
+       (when (contains? input k)
+         (effect-fn (get input k)))
+       (rf result input)))))
 
-(defn- print-values
-  "Effectful transducer which prints REPL result values."
-  [rf]
-  (fn
-    ([] (rf))
-    ([result] (rf result))
-    ([result input]
-     (when-some [value (:value input)]
-       (println value))
-     (rf result input))))
+(def ^:private print-output (effecting :out print))
+(def ^:private print-values (effecting :value println))
 
 (defn- null-reducer
   "A reducing function which does nothing."
