@@ -18,8 +18,6 @@
   (println)
   (System/exit 0))
 
-(defn- contains-status? [message status]
-  (contains? (into #{} (:status message)) status))
 
 (defn- take-until
   "Transducer like take-while, except keeps the last value tested."
@@ -34,6 +32,11 @@
           (reduced? result) result
           (pred input)      (reduced result)
           :else             result))))))
+
+(defn- until-status
+  "Process messages until we see one with a particular status."
+  [status]
+  (take-until #(contains? (into #{} (:status %)) status)))
 
 (defn- effecting
   "Build an effectful transucer which operates on the `k` value in messages."
@@ -67,7 +70,7 @@
         msg-seq (session {:op "eval" :code (apply str args)})]
     (transduce
       (comp
-        (take-until #(contains-status? % "done"))
+        (until-status "done")
         (effecting :out print)
         (effecting :err print-err)
         (effecting :value println))
