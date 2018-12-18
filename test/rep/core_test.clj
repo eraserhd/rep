@@ -25,6 +25,8 @@
 (deftest t-rep
   (testing "basic evaluation of code"
     (is (= "4\n" (:out (rep "(+ 2 2)")))
-      "non-option arguments are evaluated")
+      "non-option arguments are evaluated and the results are printed")
+    (is (= "hello\nnil\n" (:out (rep "(println 'hello)")))
+      "output is printed")
     (is (= 0 (:exit-code (rep "(+ 2 2)")))
       "exits with zero")))

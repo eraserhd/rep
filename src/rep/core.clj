@@ -35,8 +35,19 @@
           (pred input)      (reduced result)
           :else             result))))))
 
+(defn- print-output
+  "Effectful transducer which echoes things printed to *out*."
+  [rf]
+  (fn
+    ([] (rf))
+    ([result] (rf result))
+    ([result input]
+     (when-some [out (:out input)]
+       (print out))
+     (rf result input))))
+
 (defn- print-values
-  "Effectful transducer which prints REPL output."
+  "Effectful transducer which prints REPL result values."
   [rf]
   (fn
     ([] (rf))
@@ -61,6 +72,7 @@
     (transduce
       (comp
         (take-until #(contains-status? % "done"))
+        print-output
         print-values)
       null-reducer
       msg-seq)
