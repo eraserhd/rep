@@ -1,6 +1,6 @@
 (ns rep.core-test
   (:require
-    [clojure.test :refer :all]
+    [midje.sweet :refer :all]
     [nrepl.server]
     [rep.core])
   (:import
@@ -25,13 +25,9 @@
         (System/setProperty "user.dir" starting-dir)
         (nrepl.server/stop-server server)))))
 
-(deftest t-rep
-  (testing "basic evaluation of code"
-    (is (= "4\n" (:stdout (rep "(+ 2 2)")))
-      "non-option arguments are evaluated and the results are printed")
-    (is (= "hello\nnil\n" (:stdout (rep "(println 'hello)")))
-      "output is printed to stdout")
-    (is (= "error" (:stderr (rep "(.write ^java.io.Writer *err* \"error\")")))
-      "error is printed to stderr")
-    (is (= 0 (:exit-code (rep "(+ 2 2)")))
-      "exits with zero")))
+(facts "about basic evaluation of code"
+  (rep "(+ 2 2)") => (contains {:stdout "4\n"})
+  (rep "(+ 1 1)") => (contains {:exit-code 0})
+  (rep "(println 'hello)") => (contains {:stdout "hello\nnil\n"})
+  (rep "(.write ^java.io.Writer *err* \"error\")") => (contains {:stderr "error"}))
+
