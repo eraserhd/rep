@@ -32,8 +32,11 @@
             :stdout)]
     (contains {k s})))
 
+(defn- exits-with [code]
+  (contains {:exit-code code}))
+
 (facts "about basic evaluation of code"
   (rep "(+ 2 2)")                                  => (prints "4\n")
-  (rep "(+ 1 1)")                                  => (contains {:exit-code 0})
+  (rep "(+ 1 1)")                                  => (exits-with 0)
   (rep "(println 'hello)")                         => (prints "hello\nnil\n")
   (rep "(.write ^java.io.Writer *err* \"error\")") => (prints "error" :to-stderr))
