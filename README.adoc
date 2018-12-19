@@ -2,6 +2,14 @@
 
 A single-shot nREPL client designed for shell invocation.
 
+This connects to a running nREPL server (like kind started with `lein repl`,
+for example), sends some code to be evaluated, and prints the results and
+output.
+
+ $ rep '(clojure.tools.namespace.repl/refresh)'
+ :reloading ()
+ :ok
+
 == Installation
 
 Download the latest MacOS binaries from the GitHub releases tab above.
