@@ -4,25 +4,41 @@ A single-shot nREPL client designed for shell invocation.
 
 == Installation
 
-Download from http://example.com/FIXME.
+Download the latest MacOS binaries from the GitHub releases tab above.
 
-== Usage
+== Building with Graal
 
-FIXME: explanation
+This is a somewhat graaling process right now, so bear with me.
 
- $ java -jar rep-0.1.0-standalone.jar [args]
+At the moment, Graal doesn't deal well with the way Clojure generates bytecode
+from its 'locking' macro, so to build bytecode that Graal can handle, we need
+to apply https://dev.clojure.org/jira/secure/attachment/18767/clj-1472-3.patch[this patch].
+This issue is being tracked
+https://dev.clojure.org/jira/browse/CLJ-1472[here] and
+https://github.com/oracle/graal/issues/861[here].
 
-== Options
+After applying the patch and invoking 'mvn install' for Clojure, you will need
+to clone, build, and install 'spec.alpha' with that version of Clojure.
 
-FIXME: listing of options this app accepts.
+When that's done, you can update the versions of Clojure and spec.alpha
+referenced in the project.clj to match the snapshots you've just locally
+installed.
 
-== Examples
+Assuming you've already installed Graal VM and put it in the path, you should
+then be able to build the image:
 
- $ rep "(+ 2 2)"
+  $ lein native-image
+
+You will find it in 'target/default+uberconf/rep'.
+
+== Usage, Options, and Examples
+
+See [the rep manpage](rep.1.adoc).
 
 == License
 
-Copyright © 2018 Jason M. Felice
+Copyright © 2018 Jason M. Felice, except for included code written
+by other people.
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
