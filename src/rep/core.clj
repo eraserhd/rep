@@ -65,43 +65,55 @@
 (def ^:private cli-options
   [["-h" "--help"]])
 
+(defmulti command
+  (fn [opts]
+    (cond
+      (:errors opts)          :syntax
+      (:help (:options opts)) :help
+      :else                   :eval)))
 
-(defn mode
-  [opts]
-  (if (:help (:options opts))
-    :help
-    :eval))
+(defmethod command :syntax
+  [{:keys [errors]}]
+  (doseq [^String e errors]
+    (.write ^java.io.Writer *err* e))
+  (.flush ^java.io.Writer *err*)
+  2)
+
+(defmethod command :help
+  [{:keys [summary]}]
+  (println "rep: Single-shot nREPL client")
+  (println "Syntax:")
+  (println "  rep [OPTIONS] CODE ...")
+  (println)
+  (println "Options:")
+  (println summary)
+  (println)
+  0)
+
+(defmethod command :eval
+  [{:keys [arguments]}]
+  (let [conn (nrepl/connect :port (nrepl-port))
+        client (nrepl/client conn 60000)
+        session (nrepl/client-session client)
+        msg-seq (session {:op "eval" :code (apply str arguments)})
+        result (transduce
+                 (comp
+                   (until-status "done")
+                   (effecting :out print)
+                   (effecting :err print-err)
+                   (effecting :value println)
+                   report-exceptions)
+                 null-reducer
+                 {:exit-code 0}
+                 msg-seq)
+        ^java.io.Closeable cc conn]
+    (.close cc)
+    (:exit-code result)))
 
 (defn rep
   [& args]
-  (let [{:keys [options arguments summary] :as opts} (cli/parse-opts args cli-options)]
-    (case (mode opts)
-      :help (do
-              (println "rep: Single-shot nREPL client")
-              (println "Syntax:")
-              (println "  rep [OPTIONS] CODE ...")
-              (println)
-              (println "Options:")
-              (println summary)
-              (println)
-              0)
-      :eval (let [conn (nrepl/connect :port (nrepl-port))
-                  client (nrepl/client conn 60000)
-                  session (nrepl/client-session client)
-                  msg-seq (session {:op "eval" :code (apply str arguments)})
-                  result (transduce
-                           (comp
-                             (until-status "done")
-                             (effecting :out print)
-                             (effecting :err print-err)
-                             (effecting :value println)
-                             report-exceptions)
-                           null-reducer
-                           {:exit-code 0}
-                           msg-seq)
-                  ^java.io.Closeable cc conn]
-              (.close cc)
-              (:exit-code result)))))
+  (let [opts (cli/parse-opts args cli-options)]
+    (command opts)))
 
 (defn -main
   [& args]

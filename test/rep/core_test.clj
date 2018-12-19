@@ -46,3 +46,7 @@
 (facts "about help"
   (rep "-h")     => (prints #"rep: Single-shot nREPL client")
   (rep "--help") => (prints #"rep: Single-shot nREPL client"))
+
+(facts "about invalid switches"
+  (rep "-/") => (prints #"Unknown option" :to-stderr)
+  (rep "-/") => (exits-with 2))
