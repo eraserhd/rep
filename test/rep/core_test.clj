@@ -10,8 +10,12 @@
   [& args]
   (let [server (nrepl.server/start-server)
         starting-dir (System/getProperty "user.dir")
-        rep-args (filter string? args)
-        
+        rep-args (->> args
+                      (remove map?)
+                      (map (fn [arg]
+                             (case arg
+                               :<port> (str (:port server))
+                               arg))))
         {:keys [port-file]
          :or {port-file ".nrepl-port"}}
         (first (filter map? args))]
@@ -58,4 +62,6 @@
 
 (facts "about specifying the nREPL port"
   (rep "-p" "@.nrepl-port" "42")                    => (prints "42\n")
-  (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"}) => (prints "69\n"))
+  (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"}) => (prints "69\n")
+  ;FIXME: Absolute path works correctly
+  (rep "-p" :<port> "77" {:port-file "bad.txt"})    => (prints "77\n"))

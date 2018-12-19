@@ -6,9 +6,11 @@
 
 (defn- nrepl-port
   [opts]
-  (let [dir (System/getProperty "user.dir")
-        filename (subs (get-in opts [:options :port]) 1)]
-    (Long/parseLong (slurp (str dir "/" filename)))))
+  (let [dir (System/getProperty "user.dir")]
+    (loop [option-value (:port (:options opts))]
+      (if-some [[_ filename :as x] (re-matches #"^@(.*)" option-value)]
+        (recur (slurp (str dir "/" filename)))
+        (Long/parseLong option-value)))))
 
 (defn- take-until
   "Transducer like take-while, except keeps the last value tested."
