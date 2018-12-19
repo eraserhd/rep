@@ -1,5 +1,7 @@
 = rep
 
+https://github.com/eraserhd/rep
+
 A single-shot nREPL client designed for shell invocation.
 
 This connects to a running nREPL server (like kind started with `lein repl`,
