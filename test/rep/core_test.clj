@@ -9,15 +9,20 @@
 (defn- rep
   [& args]
   (let [server (nrepl.server/start-server)
-        starting-dir (System/getProperty "user.dir")]
+        starting-dir (System/getProperty "user.dir")
+        rep-args (filter string? args)
+        
+        {:keys [port-file]
+         :or {port-file ".nrepl-port"}}
+        (first (filter map? args))]
     (try
       (System/setProperty "user.dir" (str starting-dir "/target"))
-      (spit (str starting-dir "/target/.nrepl-port") (str (:port server)))
+      (spit (str starting-dir "/target/" port-file) (str (:port server)))
       (let [out (ByteArrayOutputStream.)
             err (ByteArrayOutputStream.)]
         (let [exit-code (binding [*out* (OutputStreamWriter. out)
                                   *err* (OutputStreamWriter. err)]
-                          (apply rep.core/rep args))]
+                          (apply rep.core/rep rep-args))]
           {:stdout (.toString out)
            :stderr (.toString err)
            :exit-code exit-code}))
@@ -52,4 +57,5 @@
   (rep "-/") => (exits-with 2))
 
 (facts "about specifying the nREPL port"
-  (rep "-p" "@.nrepl-port" "42") => (prints "42\n"))
+  (rep "-p" "@.nrepl-port" "42")                    => (prints "42\n")
+  (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"}) => (prints "69\n"))

@@ -5,9 +5,10 @@
   (:gen-class))
 
 (defn- nrepl-port
-  []
-  (let [dir (System/getProperty "user.dir")]
-    (Long/parseLong (slurp (str dir "/.nrepl-port")))))
+  [opts]
+  (let [dir (System/getProperty "user.dir")
+        filename (subs (get-in opts [:options :port]) 1)]
+    (Long/parseLong (slurp (str dir "/" filename)))))
 
 (defn- take-until
   "Transducer like take-while, except keeps the last value tested."
@@ -93,8 +94,8 @@
   0)
 
 (defmethod command :eval
-  [{:keys [arguments]}]
-  (let [conn (nrepl/connect :port (nrepl-port))
+  [{:keys [arguments] :as opts}]
+  (let [conn (nrepl/connect :port (nrepl-port opts))
         client (nrepl/client conn 60000)
         session (nrepl/client-session client)
         msg-seq (session {:op "eval" :code (apply str arguments)})
