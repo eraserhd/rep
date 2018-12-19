@@ -14,7 +14,10 @@
         (if (.isAbsolute (File. filename))
           (recur (slurp filename))
           (recur (slurp (str (File. dir filename)))))
-        (Long/parseLong option-value)))))
+        (if-some [[_ host port] (re-matches #"(.*):(.*)" option-value)]
+          {:host host,
+           :port (Long/parseLong port)}
+          {:port (Long/parseLong option-value)})))))
 
 (defn- take-until
   "Transducer like take-while, except keeps the last value tested."
@@ -101,7 +104,10 @@
 
 (defmethod command :eval
   [{:keys [arguments] :as opts}]
-  (let [conn (nrepl/connect :port (nrepl-port opts))
+  (let [{:keys [host port]} (nrepl-port opts)
+        conn (apply nrepl/connect :port port (if host
+                                               [:host host]
+                                               []))
         client (nrepl/client conn 60000)
         session (nrepl/client-session client)
         msg-seq (session {:op "eval" :code (apply str arguments)})

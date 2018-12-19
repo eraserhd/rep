@@ -14,7 +14,8 @@
                       (remove map?)
                       (map (fn [arg]
                              (case arg
-                               :<port> (str (:port server))
+                               :<host+port> (str "localhost:" (:port server))
+                               :<port>      (str (:port server))
                                arg))))
         {:keys [port-file]
          :or {port-file ".nrepl-port"}}
@@ -61,8 +62,9 @@
   (rep "-/") => (exits-with 2))
 
 (facts "about specifying the nREPL port"
-  (rep "-p" "@.nrepl-port" "42")                    => (prints "42\n")
-  (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"}) => (prints "69\n")
   (let [absolute-path (str "@" (System/getProperty "user.dir") "/target/.nrepl-port")]
-    (rep "-p" absolute-path  "11") => (prints "11\n"))
-  (rep "-p" :<port> "77" {:port-file "bad.txt"})    => (prints "77\n"))
+    (rep "-p" "@.nrepl-port" "42")                    => (prints "42\n")
+    (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"}) => (prints "69\n")
+    (rep "-p" absolute-path  "11")                    => (prints "11\n")
+    (rep "-p" :<port> "77" {:port-file "bad"})        => (prints "77\n")
+    (rep "-p" :<host+port> "99" {:port-file "bad"}))  => (prints "99\n"))
