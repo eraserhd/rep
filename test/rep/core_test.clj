@@ -50,3 +50,6 @@
 (facts "about invalid switches"
   (rep "-/") => (prints #"Unknown option" :to-stderr)
   (rep "-/") => (exits-with 2))
+
+(facts "about specifying the nREPL port"
+  (rep "-p" "@.nrepl-port" "42") => (prints "42\n"))

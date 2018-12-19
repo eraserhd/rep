@@ -484,7 +484,7 @@
   not displaying defaults. There are three sequences of lengths if we
   are showing defaults."
   [lens parts]
-  (let [fmt (apply str (map #(str "  %" (if-not (zero? %) %) "s") lens))]
+  (let [fmt (apply str (map #(str "  %-" (if-not (zero? %) %) "s") lens))]
     (map #(s/trimr (apply format fmt %)) parts)))
 
 (defn- required-arguments [specs]

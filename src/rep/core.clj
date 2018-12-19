@@ -63,7 +63,9 @@
   ([result input] result))
 
 (def ^:private cli-options
-  [["-h" "--help"]])
+  [["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
+    :default "@.nrepl-port"]
+   ["-h" "--help" "Show this help screen."]])
 
 (defmulti command
   (fn [opts]
