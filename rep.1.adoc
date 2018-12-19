@@ -1,0 +1,34 @@
+= REP(1)
+:doctype: manpage
+
+
+== NAME
+rep - a single-shot nREPL client
+
+== SYNOPSIS
+*rep* ['OPTIONS'] 'EXPR' ...
+
+== OPTIONS
+*-h, --help*::
+    Show a summary of help options.
+
+*-p, --port*='@FILE|[HOST:]PORT'::
+    Specify the nREPL 'PORT' and possibly 'HOST'.  If 'FILE' is given, the
+    host and port are read from a file.  If 'HOST' is not given, 'localhost'
+    is assumed.  The default is '@.nrepl-port', which will find the running
+    nREPL if it was invoked by Leiningen.
+
+== EXAMPLES
+`rep '(+ 2 2)'`::
+    Evaluate a simple expression in the running nREPL server and print its
+    result.
+
+== EXIT STATUS
+*0*::
+    Success
+
+*1*::
+    One of the expressions given threw an exception.
+
+*2*::
+    An error occurred while parsing options.
