@@ -63,5 +63,6 @@
 (facts "about specifying the nREPL port"
   (rep "-p" "@.nrepl-port" "42")                    => (prints "42\n")
   (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"}) => (prints "69\n")
-  ;FIXME: Absolute path works correctly
+  (let [absolute-path (str "@" (System/getProperty "user.dir") "/target/.nrepl-port")]
+    (rep "-p" absolute-path  "11") => (prints "11\n"))
   (rep "-p" :<port> "77" {:port-file "bad.txt"})    => (prints "77\n"))

@@ -2,14 +2,18 @@
   (:require
    [clojure.tools.cli :as cli]
    [nrepl.core :as nrepl])
+  (:import
+   (java.io File))
   (:gen-class))
 
 (defn- nrepl-port
   [opts]
-  (let [dir (System/getProperty "user.dir")]
+  (let [^String dir (System/getProperty "user.dir")]
     (loop [option-value (:port (:options opts))]
-      (if-some [[_ filename :as x] (re-matches #"^@(.*)" option-value)]
-        (recur (slurp (str dir "/" filename)))
+      (if-some [[_ ^String filename :as x] (re-matches #"^@(.*)" option-value)]
+        (if (.isAbsolute (File. filename))
+          (recur (slurp filename))
+          (recur (slurp (str (File. dir filename)))))
         (Long/parseLong option-value)))))
 
 (defn- take-until
