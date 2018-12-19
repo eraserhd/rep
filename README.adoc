@@ -41,7 +41,7 @@ You will find it in 'target/default+uberconf/rep'.
 
 == Usage, Options, and Examples
 
-See [the rep manpage](rep.1.adoc).
+See https://github.com/eraserhd/rep/blob/develop/rep.1.adoc[the rep manpage].
 
 == License
 
