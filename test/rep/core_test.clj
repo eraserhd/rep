@@ -42,3 +42,7 @@
   (rep "(.write ^java.io.Writer *err* \"error\")") => (prints "error" :to-stderr)
   (rep "(throw (ex-info \"x\" {}))")               => (prints #"ExceptionInfo" :to-stderr)
   (rep "(throw (ex-info \"x\" {}))")               => (exits-with 1))
+
+(facts "about help"
+  (rep "-h")     => (prints #"rep: Single-shot nREPL client")
+  (rep "--help") => (prints #"rep: Single-shot nREPL client"))

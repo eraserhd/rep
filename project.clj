@@ -5,6 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.10.0-master-SNAPSHOT"]
                  [org.clojure/spec.alpha "0.2.177-SNAPSHOT"]
+                 [org.clojure/tools.cli "0.4.1"]
                  [nrepl/nrepl "0.5.1"]]
   :main ^:skip-aot rep.core
   :global-vars {*warn-on-reflection* true}

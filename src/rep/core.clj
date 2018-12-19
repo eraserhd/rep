@@ -1,5 +1,6 @@
 (ns rep.core
   (:require
+   [clojure.tools.cli :as cli]
    [nrepl.core :as nrepl])
   (:gen-class))
 
@@ -7,16 +8,6 @@
   []
   (let [dir (System/getProperty "user.dir")]
     (Long/parseLong (slurp (str dir "/.nrepl-port")))))
-
-(defn- help
-  []
-  (println "rep: single-shot nREPL client")
-  (println "Syntax:")
-  (println "  rep [OPTIONS] CODE ...")
-  (println)
-  (println "Options:")
-  (println)
-  (System/exit 0))
 
 (defn- take-until
   "Transducer like take-while, except keeps the last value tested."
@@ -71,25 +62,39 @@
   ([result] result)
   ([result input] result))
 
+(def ^:private cli-options
+  [["-h" "--help"]])
+
 (defn rep
   [& args]
-  (let [conn (nrepl/connect :port (nrepl-port))
-        client (nrepl/client conn 60000)
-        session (nrepl/client-session client)
-        msg-seq (session {:op "eval" :code (apply str args)})
-        result (transduce
-                 (comp
-                   (until-status "done")
-                   (effecting :out print)
-                   (effecting :err print-err)
-                   (effecting :value println)
-                   report-exceptions)
-                 null-reducer
-                 {:exit-code 0}
-                 msg-seq)
-        ^java.io.Closeable cc conn]
-    (.close cc)
-    (:exit-code result)))
+  (let [{:keys [options arguments summary]} (cli/parse-opts args cli-options)]
+    (if (:help options)
+      (do
+        (println "rep: Single-shot nREPL client")
+        (println "Syntax:")
+        (println "  rep [OPTIONS] CODE ...")
+        (println)
+        (println "Options:")
+        (println summary)
+        (println)
+        0)
+      (let [conn (nrepl/connect :port (nrepl-port))
+            client (nrepl/client conn 60000)
+            session (nrepl/client-session client)
+            msg-seq (session {:op "eval" :code (apply str arguments)})
+            result (transduce
+                     (comp
+                       (until-status "done")
+                       (effecting :out print)
+                       (effecting :err print-err)
+                       (effecting :value println)
+                       report-exceptions)
+                     null-reducer
+                     {:exit-code 0}
+                     msg-seq)
+            ^java.io.Closeable cc conn]
+        (.close cc)
+        (:exit-code result)))))
 
 (defn -main
   [& args]
