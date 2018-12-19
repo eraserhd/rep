@@ -75,7 +75,7 @@
 (defmethod command :syntax
   [{:keys [errors]}]
   (doseq [^String e errors]
-    (.write ^java.io.Writer *err* e))
+    (.write ^java.io.Writer *err* (str e \newline)))
   (.flush ^java.io.Writer *err*)
   2)
 
