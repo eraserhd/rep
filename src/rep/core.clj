@@ -6,19 +6,6 @@
    (java.io File))
   (:gen-class))
 
-(defn- nrepl-port
-  [opts]
-  (let [^String dir (System/getProperty "user.dir")]
-    (loop [option-value (:port (:options opts))]
-      (if-some [[_ ^String filename :as x] (re-matches #"^@(.*)" option-value)]
-        (if (.isAbsolute (File. filename))
-          (recur (slurp filename))
-          (recur (slurp (str (File. dir filename)))))
-        (if-some [[_ host port] (re-matches #"(.*):(.*)" option-value)]
-          {:host host,
-           :port (Long/parseLong port)}
-          {:port (Long/parseLong option-value)})))))
-
 (defn- take-until
   "Transducer like take-while, except keeps the last value tested."
   [pred]
@@ -102,12 +89,21 @@
   (println)
   0)
 
+(defn- nrepl-connect-args
+  [opts]
+  (let [^String dir (System/getProperty "user.dir")]
+    (loop [option-value (:port (:options opts))]
+      (if-some [[_ ^String filename :as x] (re-matches #"^@(.*)" option-value)]
+        (if (.isAbsolute (File. filename))
+          (recur (slurp filename))
+          (recur (slurp (str (File. dir filename)))))
+        (if-some [[_ host port] (re-matches #"(.*):(.*)" option-value)]
+          [:host host :port (Long/parseLong port)]
+          [:port (Long/parseLong option-value)])))))
+
 (defmethod command :eval
   [{:keys [arguments] :as opts}]
-  (let [{:keys [host port]} (nrepl-port opts)
-        conn (apply nrepl/connect :port port (if host
-                                               [:host host]
-                                               []))
+  (let [conn (apply nrepl/connect (nrepl-connect-args opts))
         client (nrepl/client conn 60000)
         session (nrepl/client-session client)
         msg-seq (session {:op "eval" :code (apply str arguments)})
