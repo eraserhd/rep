@@ -9,6 +9,9 @@ rep - a single-shot nREPL client
 *rep* ['OPTIONS'] 'EXPR' ...
 
 == OPTIONS
+*--*::
+    End of options.  Useful to send code which starts with a dash.
+
 *-h, --help*::
     Show a summary of help options.
 

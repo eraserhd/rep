@@ -10,7 +10,7 @@ define-command \
             eval set -- $kak_selections
             error_file=$(mktemp)
             while [ $# -gt 0 ]; do
-                value=$(rep "$1" 2>"$error_file" |sed -e "s/'/''/g")
+                value=$(rep -- "$1" 2>"$error_file" |sed -e "s/'/''/g")
                 error=$(sed "s/'/''/g" <"$error_file")
                 rm -f "$error_file"
                 printf "set-option -add global rep_evaluate_output '%s'\n" "$value"
@@ -20,7 +20,7 @@ define-command \
                 shift
             done
         }
-        echo "%opt{rep_evaluate_output}"
+        echo -- "%opt{rep_evaluate_output}"
     }
 }
 
@@ -31,7 +31,7 @@ define-command \
         execute-keys '%'
         rep-evaluate-selection
     }
-    echo "%opt{rep_evaluate_output}"
+    echo -- "%opt{rep_evaluate_output}"
 }
 
 map global user e ': enter-user-mode rep<ret>'
