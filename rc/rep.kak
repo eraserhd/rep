@@ -28,9 +28,8 @@ define-command \
     -docstring %{rep-evaluate-file: Evaluate the entire file in the REPL.} \
     rep-evaluate-file %{
     evaluate-commands -draft %{
-        execute-keys 'Z%'
+        execute-keys '%'
         rep-evaluate-selection
-        execute-keys 'z'
     }
     echo "%opt{rep_evaluate_output}"
 }
