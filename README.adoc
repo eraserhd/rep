@@ -45,6 +45,15 @@ You will find it in 'target/default+uberconf/rep'.
 
 See https://github.com/eraserhd/rep/blob/develop/rep.1.adoc[the rep manpage].
 
+== Using with Kakoune
+
+The `rc/` folder contains scripts which add a `,e` user mode to Kakoune.  To
+link this to Kakoiune's autoload directory, do the following:
+
+  $ make install
+
+`rep` must be in the path for the plugin to work.
+
 == License
 
 Copyright © 2018 Jason M. Felice, except for included code written
