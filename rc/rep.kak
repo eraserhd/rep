@@ -36,5 +36,5 @@ define-command \
 }
 
 map global user e ': enter-user-mode rep<ret>'
-map global rep e ': rep-evaluate-selection<ret>'
-map global rep f ': rep-evaluate-file<ret>'
+map -docstring 'evaluate the selection in the REPL' global rep e ': rep-evaluate-selection<ret>'
+map -docstring 'evaluate this file in the REPL' global rep f ': rep-evaluate-file<ret>'
