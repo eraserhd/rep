@@ -59,15 +59,18 @@
   ([result] result)
   ([result input] result))
 
+(defn- parse-namespace-arg
+  [ns-arg]
+  (condp re-matches ns-arg
+    #"^\s*\(.*" (let [[head ns-symbol] (read-string ns-arg)]
+                  (assert (= 'ns head) "ns form not found in -n argument")
+                  (str ns-symbol))
+    ns-arg))
+
 (def ^:private cli-options
   [["-n" "--namespace NS"           "Evaluate expressions in NS."
     :default "user"
-    :parse-fn (fn [ns-arg]
-                (condp re-matches ns-arg
-                  #"^\s*\(.*" (let [[head ns-symbol] (read-string ns-arg)]
-                                (assert (= 'ns head) "ns form not found in -n argument")
-                                (str ns-symbol))
-                  ns-arg))]
+    :parse-fn parse-namespace-arg]
    ["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
     :default "@.nrepl-port"]
    ["-h" "--help" "Show this help screen."]])
