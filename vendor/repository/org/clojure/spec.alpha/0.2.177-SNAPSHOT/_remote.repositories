@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Dec 13 10:44:07 EST 2018
+spec.alpha-0.2.177-SNAPSHOT.jar>=
+spec.alpha-0.2.177-SNAPSHOT.pom>=

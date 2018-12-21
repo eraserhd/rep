@@ -13,6 +13,10 @@ jobs:
       - restore_cache:
           <<: *cache_config
       - run:
+          name: Installing snapshots
+          command: |
+            ( cd vendor && find |cpio -p ~/.m2/ )
+      - run:
           name: Running tests
           command: |
             lein midje
