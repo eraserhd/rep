@@ -1,6 +1,7 @@
 (ns rep.core
   (:require
    [clojure.tools.cli :as cli]
+   [clojure.tools.reader :as edn]
    [nrepl.core :as nrepl])
   (:import
    (java.io File))
@@ -59,20 +60,9 @@
   ([result] result)
   ([result input] result))
 
-(defn- parse-namespace-arg
-  [ns-arg]
-  (loop [ns-arg ns-arg]
-    (condp re-matches ns-arg
-      #"^@(.*)"         (recur (slurp (subs ns-arg 1)))
-      #"(?s)^\s*[(;].*" (let [[head ns-symbol] (read-string ns-arg)]
-                          (assert (= 'ns head) "ns form not found in -n argument")
-                          (str ns-symbol))
-      ns-arg)))
-
 (def ^:private cli-options
   [["-n" "--namespace NS"           "Evaluate expressions in NS."
-    :default "user"
-    :parse-fn parse-namespace-arg]
+    :default "user"]
    ["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
     :default "@.nrepl-port"]
    ["-h" "--help" "Show this help screen."]])
