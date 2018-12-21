@@ -20,6 +20,10 @@ Download the latest MacOS binaries from the GitHub releases tab above.
 
 This is a somewhat graaling process right now, so bear with me.
 
+First, leiningen wants different versions of nREPL, and we've needed to hack
+up nREPL's transport.clj, so we need to use leiningen 2.8.1 exactly, so I've
+copied that to `./lein`.
+
 At the moment, Graal doesn't deal well with the way Clojure generates bytecode
 from its 'locking' macro, so to build bytecode that Graal can handle, we need
 to apply https://dev.clojure.org/jira/secure/attachment/18767/clj-1472-3.patch[this patch].
@@ -37,7 +41,7 @@ installed.
 Assuming you've already installed Graal VM and put it in the path, you should
 then be able to build the image:
 
-  $ lein native-image
+  $ ./lein native-image
 
 You will find it in 'target/default+uberconf/rep'.
 
