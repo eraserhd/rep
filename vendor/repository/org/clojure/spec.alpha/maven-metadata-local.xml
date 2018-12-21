@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.clojure</groupId>
+  <artifactId>spec.alpha</artifactId>
+  <versioning>
+    <versions>
+      <version>0.2.177-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20181213154407</lastUpdated>
+  </versioning>
+</metadata>

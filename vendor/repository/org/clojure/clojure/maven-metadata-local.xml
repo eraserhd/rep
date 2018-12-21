@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.clojure</groupId>
+  <artifactId>clojure</artifactId>
+  <versioning>
+    <versions>
+      <version>1.10.0-master-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20181213143810</lastUpdated>
+  </versioning>
+</metadata>
