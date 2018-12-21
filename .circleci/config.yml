@@ -15,7 +15,7 @@ jobs:
       - run:
           name: Installing snapshots
           command: |
-            ( cd vendor && find |cpio -p ~/.m2/ )
+            cp -arp ./vendor/ ~/.m2/
       - run:
           name: Running tests
           command: |
