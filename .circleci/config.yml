@@ -16,6 +16,7 @@ jobs:
           name: Installing snapshots
           command: |
             cp -arvp ./vendor/ ~/.m2/
+            find ~/.m2
       - run:
           name: Running tests
           command: |
