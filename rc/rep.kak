@@ -42,7 +42,7 @@ Switches:
             if [ -n "$ns" ]; then
                 rep_opts="$rep_opts -n $ns"
             fi
-            eval set -- $kak_selections
+            eval set -- "$kak_selections"
             error_file=$(mktemp)
             while [ $# -gt 0 ]; do
                 value=$(rep $rep_opts -- "$1" 2>"$error_file" |sed -e "s/'/''/g")
