@@ -1,0 +1,25 @@
+version: 2
+variables:
+  cache_config: &cache_config
+    key: v1-rep-{{ checksum "project.clj" }}
+    paths:
+      - ~/.m2
+jobs:
+  build-and-test:
+    docker:
+      - image: circleci/clojure:lein-2.8.1
+    steps:
+      - checkout
+      - restore_cache:
+          <<: *cache_config
+      - run:
+          name: Running tests
+          command: |
+            lein midje
+      - save_cache:
+          <<: *cache_config
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build-and-test
