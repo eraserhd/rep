@@ -75,4 +75,6 @@
     (rep "-n" "rep.core" "(str *ns*)") => (prints "\"rep.core\"\n"))
   (facts "about sending an ns form"
     (rep "-n" "\n (ns rep.core) more.." "(str *ns*)")    => (prints "\"rep.core\"\n")
-    (rep "-n" ";; comment\n (ns rep.core)" "(str *ns*)") => (prints "\"rep.core\"\n")))
+    (rep "-n" ";; comment\n (ns rep.core)" "(str *ns*)") => (prints "\"rep.core\"\n"))
+  (facts "about sending a reference to a file"
+    (rep "-n" "@src/rep/core.clj" "(str *ns*)") => (prints "\"rep.core\"\n")))

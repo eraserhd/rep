@@ -61,11 +61,13 @@
 
 (defn- parse-namespace-arg
   [ns-arg]
-  (condp re-matches ns-arg
-    #"(?s)^\s*[(;].*" (let [[head ns-symbol] (read-string ns-arg)]
-                        (assert (= 'ns head) "ns form not found in -n argument")
-                        (str ns-symbol))
-    ns-arg))
+  (loop [ns-arg ns-arg]
+    (condp re-matches ns-arg
+      #"^@(.*)"         (recur (slurp (subs ns-arg 1)))
+      #"(?s)^\s*[(;].*" (let [[head ns-symbol] (read-string ns-arg)]
+                          (assert (= 'ns head) "ns form not found in -n argument")
+                          (str ns-symbol))
+      ns-arg)))
 
 (def ^:private cli-options
   [["-n" "--namespace NS"           "Evaluate expressions in NS."
