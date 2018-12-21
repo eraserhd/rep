@@ -68,3 +68,7 @@
     (rep "-p" absolute-path  "11")                    => (prints "11\n")
     (rep "-p" :<port> "77" {:port-file "bad"})        => (prints "77\n")
     (rep "-p" :<host+port> "99" {:port-file "bad"}))  => (prints "99\n"))
+
+(facts "about specifying the eval namespace"
+  (rep "-n" "user" "(str *ns*)")     => (prints "\"user\"\n")
+  (rep "-n" "rep.core" "(str *ns*)") => (prints "\"rep.core\"\n"))

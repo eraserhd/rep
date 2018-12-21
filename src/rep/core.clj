@@ -60,7 +60,9 @@
   ([result input] result))
 
 (def ^:private cli-options
-  [["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
+  [["-n" "--namespace NS"           "Evaluate expressions in NS."
+    :default "user"]
+   ["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
     :default "@.nrepl-port"]
    ["-h" "--help" "Show this help screen."]])
 
@@ -102,11 +104,13 @@
           [:port (Long/parseLong option-value)])))))
 
 (defmethod command :eval
-  [{:keys [arguments] :as opts}]
+  [{:keys [options arguments] :as opts}]
   (let [conn (apply nrepl/connect (nrepl-connect-args opts))
         client (nrepl/client conn 60000)
         session (nrepl/client-session client)
-        msg-seq (session {:op "eval" :code (apply str arguments)})
+        msg-seq (session {:op "eval"
+                          :ns (:namespace options)
+                          :code (apply str arguments)})
         result (transduce
                  (comp
                    (until-status "done")
