@@ -74,4 +74,5 @@
     (rep "-n" "user" "(str *ns*)")     => (prints "\"user\"\n")
     (rep "-n" "rep.core" "(str *ns*)") => (prints "\"rep.core\"\n"))
   (facts "about sending an ns form"
-    (rep "-n" "\n (ns rep.core) more.." "(str *ns*)") => (prints "\"rep.core\"\n")))
+    (rep "-n" "\n (ns rep.core) more.." "(str *ns*)")    => (prints "\"rep.core\"\n")
+    (rep "-n" ";; comment\n (ns rep.core)" "(str *ns*)") => (prints "\"rep.core\"\n")))
