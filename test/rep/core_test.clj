@@ -73,3 +73,7 @@
   (facts "about sending a bare namespace name"
     (rep "-n" "user" "(str *ns*)")     => (prints "\"user\"\n")
     (rep "-n" "rep.core" "(str *ns*)") => (prints "\"rep.core\"\n")))
+
+(facts "about specifying line numbers"
+  (rep "(throw (Exception.))") => (prints #":1" :to-stderr)
+  (rep "-l" "27" "(throw (Exception.))") => (prints #":27" :to-stderr))

@@ -61,11 +61,13 @@
   ([result input] result))
 
 (def ^:private cli-options
-  [["-n" "--namespace NS"           "Evaluate expressions in NS."
+  [["-l" "--line LINE"              "Specify code's starting LINE."
+    :default "1"]
+   ["-n" "--namespace NS"           "Evaluate expressions in NS."
     :default "user"]
    ["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
     :default "@.nrepl-port"]
-   ["-h" "--help" "Show this help screen."]])
+   ["-h" "--help"                   "Show this help screen."]])
 
 (defmulti command
   (fn [opts]
@@ -111,7 +113,8 @@
         session (nrepl/client-session client)
         msg-seq (session {:op "eval"
                           :ns (:namespace options)
-                          :code (apply str arguments)})
+                          :code (apply str arguments)
+                          :line (Long/parseLong (:line options))})
         result (transduce
                  (comp
                    (until-status "done")
