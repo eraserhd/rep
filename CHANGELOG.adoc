@@ -1,0 +1,17 @@
+Change Log
+==========
+
+== [Unreleased]
+=== Added
+
+* Add -n, --namespace option to specify the namespace of evaluated code.
+* Add -l, --line option to specify the file, line number, and column of
+  evaluated code.
+
+== 0.1.0 - 2018-11-30
+=== Added
+
+* First release with basic features (able to evaluate code and print
+  results).
+
+[Unreleased]: https://github.com/eraserhd/rep/compare/0.1.0...HEAD
