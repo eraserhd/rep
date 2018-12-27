@@ -15,7 +15,15 @@ rep - a single-shot nREPL client
 *-h, --help*::
     Show a summary of help options.
 
-*-n, --namespace=NS*::
+*-l, --line*='[FILE:]LINE[:COLUMN]'::
+    Specify the FILE, LINE number, and COLUMN of the code being evaluated.
+    This is used by for compile errors, exceptions, and metadata on evaluated
+    symbols, so specifying this will improve your error messages.
+
+    LINE must be supplied if COLUMN is supplied, but all other combinations
+    are allowed.
+
+*-n, --namespace*=NS::
     Evaluate code in NS.  'ns' forms themselves should be evaluated in 'user'
     in case they don't already exist.  'user' is the default.
 
