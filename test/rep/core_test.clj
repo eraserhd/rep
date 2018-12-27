@@ -8,7 +8,8 @@
 
 (defn- rep
   [& args]
-  (let [server (nrepl.server/start-server)
+  (let [server (binding [*file* nil]
+                 (nrepl.server/start-server))
         starting-dir (System/getProperty "user.dir")
         rep-args (->> args
                       (remove map?)
@@ -75,5 +76,5 @@
     (rep "-n" "rep.core" "(str *ns*)") => (prints "\"rep.core\"\n")))
 
 (facts "about specifying line numbers"
-  (rep "(throw (Exception.))") => (prints #":1" :to-stderr)
-  (rep "-l" "27" "(throw (Exception.))") => (prints #":27" :to-stderr))
+  (rep "(throw (Exception.))") => (prints #"REPL:1" :to-stderr)
+  (rep "-l" "27" "(throw (Exception.))") => (prints #"REPL:27" :to-stderr))
