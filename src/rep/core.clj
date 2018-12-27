@@ -60,13 +60,18 @@
   ([result] result)
   ([result input] result))
 
-(defn- line-parse-fn [arg]
-  {:line (Long/parseLong arg)})
+(defn- parse-line-argument [arg]
+  (condp re-matches arg
+    #"(\d+):(\d+)" :>> (fn [[_ line column]]
+                         {:line (Long/parseLong line)
+                          :column (Long/parseLong column)})
+    #"(\d+)"       :>> (fn [[_ line]]
+                         {:line (Long/parseLong line)})))
 
 (def ^:private cli-options
-  [["-l" "--line LINE"              "Specify code's starting LINE."
-    :parse-fn line-parse-fn
-    :default {:line 1}
+  [["-l" "--line LINE[:COLUMN]"     "Specify code's starting LINE and COLUMN."
+    :parse-fn parse-line-argument
+    :default (parse-line-argument "1")
     :default-desc "1"]
    ["-n" "--namespace NS"           "Evaluate expressions in NS."
     :default "user"]
