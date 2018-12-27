@@ -65,6 +65,9 @@
     #"(\d+):(\d+)" :>> (fn [[_ line column]]
                          {:line (Long/parseLong line)
                           :column (Long/parseLong column)})
+    #"(.*):(\d+)"  :>> (fn [[_ file line]]
+                         {:file file
+                          :line (Long/parseLong line)})
     #"(\d+)"       :>> (fn [[_ line]]
                          {:line (Long/parseLong line)})))
 
