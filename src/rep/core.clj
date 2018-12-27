@@ -60,9 +60,14 @@
   ([result] result)
   ([result input] result))
 
+(defn- line-parse-fn [arg]
+  {:line (Long/parseLong arg)})
+
 (def ^:private cli-options
   [["-l" "--line LINE"              "Specify code's starting LINE."
-    :default "1"]
+    :parse-fn line-parse-fn
+    :default {:line 1}
+    :default-desc "1"]
    ["-n" "--namespace NS"           "Evaluate expressions in NS."
     :default "user"]
    ["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
@@ -111,10 +116,10 @@
   (let [conn (apply nrepl/connect (nrepl-connect-args opts))
         client (nrepl/client conn 60000)
         session (nrepl/client-session client)
-        msg-seq (session {:op "eval"
-                          :ns (:namespace options)
-                          :code (apply str arguments)
-                          :line (Long/parseLong (:line options))})
+        msg-seq (session (merge (:line options)
+                                {:op "eval"
+                                 :ns (:namespace options)
+                                 :code (apply str arguments)}))
         result (transduce
                  (comp
                    (until-status "done")
