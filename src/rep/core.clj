@@ -69,7 +69,10 @@
                          {:file file
                           :line (Long/parseLong line)})
     #"(\d+)"       :>> (fn [[_ line]]
-                         {:line (Long/parseLong line)})))
+                         {:line (Long/parseLong line)})
+    #"(.*)"        :>> (fn [[_ file]]
+                         {:file file
+                          :line 1})))
 
 (def ^:private cli-options
   [["-l" "--line LINE[:COLUMN]"     "Specify code's starting LINE and COLUMN."

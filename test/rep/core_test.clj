@@ -79,4 +79,6 @@
   (rep "(throw (Exception.))")                                  => (prints #"REPL:1" :to-stderr)
   (rep "-l" "27" "(throw (Exception.))")                        => (prints #"REPL:27" :to-stderr)
   (rep "-l" "27:11" "(do (def foo) (:column (meta #'foo)))")    => (prints "15\n")
-  (rep "-l" "foo.clj:18" "(do (def foo) (:file (meta #'foo)))") => (prints "\"foo.clj\"\n"))
+  (rep "-l" "foo.clj:18" "(do (def foo) (:file (meta #'foo)))") => (prints "\"foo.clj\"\n")
+  (rep "-l" "foo.clj" "(do (def foo) (:file (meta #'foo)))")    => (prints "\"foo.clj\"\n"))
+
