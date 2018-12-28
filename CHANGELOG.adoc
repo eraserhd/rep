@@ -8,6 +8,12 @@ Change Log
 * Add -l, --line option to specify the file, line number, and column of
   evaluated code.
 
+=== Kakoune
+
+* Evaluates code in the namespace of the file if it can detect an `ns` form
+  at the top. 
+* Sends file name and position when evaluating code.
+
 == 0.1.0 - 2018-11-30
 === Added
 
