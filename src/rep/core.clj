@@ -1,7 +1,6 @@
 (ns rep.core
   (:require
    [clojure.tools.cli :as cli]
-   [clojure.tools.reader :as edn]
    [nrepl.core :as nrepl])
   (:import
    (java.io File))
