@@ -8,6 +8,15 @@ rep - a single-shot nREPL client
 == SYNOPSIS
 *rep* ['OPTIONS'] 'EXPR' ...
 
+== DESCRIPTION
+
+`rep` connects to a running nREPL server, sends a bit of code, and prints
+the result.
+
+Unlike other nREPL clients, `rep` does not try to maintain a persistent
+connection, meaning that thread-local variables and bindings like `*e` and
+`*1` will not persist across invocations of `rep`.
+
 == OPTIONS
 *--*::
     End of options.  Useful to send code which starts with a dash.
@@ -37,6 +46,16 @@ rep - a single-shot nREPL client
 `rep '(+ 2 2)'`::
     Evaluate a simple expression in the running nREPL server and print its
     result.
+
+`rep '(clojure.tools.namespace.repl/refresh)'`::
+    Cause the running nREPL to reload any files which were changed.
+
+`rep -l src/foo/myfile.clj:26:7 -n foo.myfile '(+ 26 99)'`::
+    This is how an editor might invoke `rep` when the user requests evaluation
+    of the form under the cursor.  In addition to extracting the form under
+    the cursor, the editor will need some mechanism to extract the file's
+    namespace for the `-n` option.  `rep` will print `125`, which the editor
+    can display in its echo area, log, scratch buffer, or what not.
 
 == EXIT STATUS
 *0*::
