@@ -35,7 +35,8 @@ if ! [ -x deps/maven/bin/mvn ]; then
     cd ..
 fi
 
-source deps/path.sh
+#source deps/path.sh
+export PATH="$PWD/deps/maven/bin":"$PATH"
 
 # Build a patched Clojure (see CLJ-1472)
 clojure_version=$(sed -n 's/^.*org\.clojure\/clojure "\(.*\)".*/\1/p' project.clj)
