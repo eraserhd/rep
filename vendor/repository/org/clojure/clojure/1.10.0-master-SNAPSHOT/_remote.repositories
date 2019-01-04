@@ -1,6 +1,0 @@
-#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
-#Thu Dec 13 09:38:10 EST 2018
-clojure-1.10.0-master-SNAPSHOT-slim.jar>=
-clojure-1.10.0-master-SNAPSHOT-sources.jar>=
-clojure-1.10.0-master-SNAPSHOT.jar>=
-clojure-1.10.0-master-SNAPSHOT.pom>=

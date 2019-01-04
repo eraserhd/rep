@@ -10,3 +10,5 @@ pom.xml.asc
 /.lsp
 .hgignore
 .hg/
+/deps
+!/deps/build.sh

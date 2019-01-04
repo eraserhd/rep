@@ -1,8 +1,9 @@
 version: 2
 variables:
   cache_config: &cache_config
-    key: v1-rep-{{ checksum "project.clj" }}
+    key: v2-rep-{{ checksum "project.clj" }}-{{ checksum "deps/build.sh" }}
     paths:
+      - deps
       - ~/.m2
 jobs:
   build-and-test:
@@ -13,14 +14,21 @@ jobs:
       - restore_cache:
           <<: *cache_config
       - run:
-          name: Installing snapshots
+          name: Building patched dependencies
           command: |
-            cp -arvp ./vendor/ ~/.m2/
-            find ~/.m2
+            if ! [ -f deps/built ]; then
+                ./deps/build.sh
+            fi
       - run:
           name: Running tests
           command: |
+            source deps/path.sh
             lein midje
+      - run:
+          name: Building native image
+          command: |
+            source deps/path.sh
+            lein native-image
       - save_cache:
           <<: *cache_config
 workflows:
