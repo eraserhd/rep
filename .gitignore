@@ -10,6 +10,7 @@ pom.xml.asc
 /.lsp
 .hgignore
 .hg/
-/deps
+/deps/*
 !/deps/build.sh
 !/deps/path.sh
+!/deps/lein
