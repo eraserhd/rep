@@ -26,11 +26,6 @@ jobs:
           command: |
             source deps/path.sh
             deps/lein midje
-      - run:
-          name: Building native image
-          command: |
-            source deps/path.sh
-            deps/lein native-image
       - save_cache:
           <<: *cache_config
 workflows:
