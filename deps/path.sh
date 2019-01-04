@@ -1,6 +1,6 @@
 if [ `uname` = Darwin ]; then
-    PATH="$PWD/deps/graalvm-macos/Contents/Home/bin":"$PWD/maven/bin":$PATH
+    PATH="$PWD/deps/graalvm-macos/Contents/Home/bin":"$PWD/deps/maven/bin":$PATH
 else
-    PATH="$PWD/graalvm-linux/bin":"$PWD/maven/bin":$PATH
+    PATH="$PWD/deps/graalvm-linux/bin":"$PWD/deps/maven/bin":$PATH
 fi
 export PATH

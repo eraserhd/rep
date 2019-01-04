@@ -13,10 +13,10 @@ set -xeo pipefail
 install_graal() {
     platform="$1"
     if ! [ -d "deps/graalvm-$platform" ]; then
-        curl -Lo deps/graalvm-$platform.tar.gz https://github.com/oracle/graal/releases/download/vm-1.0.0-rc10/graalvm-ce-$graal_version-$platform-amd64.tar.gz
+        curl -Lo deps/graalvm-$platform.tar.gz https://github.com/oracle/graal/releases/download/vm-$graal_version/graalvm-ce-$graal_version-$platform-amd64.tar.gz
         cd deps
         tar xzf graalvm-$platform.tar.gz
-        mv graalvm-ce-* graalvm-macos/
+        mv graalvm-ce-* graalvm-$platform/
         cd ..
     fi
 }
