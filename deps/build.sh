@@ -25,6 +25,7 @@ install_graal() {
 install_graal macos
 install_graal linux
 
+# CircleCI Clojure images do not come with Maven
 if ! [ -x deps/maven/bin/mvn ]; then
     cd deps
     rm -rf maven/
