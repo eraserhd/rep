@@ -36,7 +36,7 @@ if ! [ -f ~/.m2/repository/org/clojure/clojure/$clojure_version/clojure-$clojure
     cd clojure
     git checkout "$clojure_commit_hash"
     curl https://dev.clojure.org/jira/secure/attachment/18767/clj-1472-3.patch |patch -p1
-    mvn install
+    mvn -e install
     cd ../..
 fi
 
@@ -63,6 +63,6 @@ index b22c46a..d19a888 100644
  
    <dependencies>
 EOF
-    mvn install
+    mvn -e install
     cd ../..
 fi
