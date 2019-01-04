@@ -3,6 +3,7 @@
   :url "https://github.com/eraserhd/rep"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :min-lein-version "2.8.3"
   :dependencies [[org.clojure/clojure "1.10.0-master-SNAPSHOT"]
                  [org.clojure/spec.alpha "0.2.177-SNAPSHOT"]
                  [org.clojure/tools.cli "0.4.1"]

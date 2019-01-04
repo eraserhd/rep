@@ -23,12 +23,12 @@ jobs:
           name: Running tests
           command: |
             source deps/path.sh
-            lein midje
+            deps/lein midje
       - run:
           name: Building native image
           command: |
             source deps/path.sh
-            lein native-image
+            deps/lein native-image
       - save_cache:
           <<: *cache_config
 workflows:

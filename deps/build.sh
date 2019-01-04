@@ -29,7 +29,6 @@ source deps/path.sh
 
 # Build a patched Clojure (see CLJ-1472)
 clojure_version=$(sed -n 's/^.*org\.clojure\/clojure "\(.*\)".*/\1/p' project.clj)
-printf 'Clojure version: %s\n' "$clojure_version"
 if ! [ -f ~/.m2/repository/org/clojure/clojure/$clojure_version/clojure-$clojure_version.jar ]; then
     cd deps
     rm -rf clojure/
