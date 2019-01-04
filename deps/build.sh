@@ -25,13 +25,13 @@ install_graal() {
 install_graal macos
 install_graal linux
 
-if  [ -x maven/bin/mvn ]; then
+if ! [ -x deps/maven/bin/mvn ]; then
     cd deps
     rm -rf maven/
     curl -Lo maven.tar.gz http://mirror.cc.columbia.edu/pub/software/apache/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz
     tar xzf maven.tar.gz
     mv apache-maven-* maven/
-    cd
+    cd ..
 fi
 
 source deps/path.sh
