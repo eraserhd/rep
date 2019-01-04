@@ -12,3 +12,4 @@ pom.xml.asc
 .hg/
 /deps
 !/deps/build.sh
+!/deps/path.sh
