@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/bash
 #
 # This is designed so that CircleCI can cache these dependencies and we won't
 # rebuild them.
