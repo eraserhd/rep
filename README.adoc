@@ -25,28 +25,14 @@ Download the latest MacOS binaries from the GitHub releases tab above.
 
 This is a somewhat graaling process right now, so bear with me.
 
-First, leiningen wants different versions of nREPL, and we've needed to hack
-up nREPL's transport.clj, so we need to use leiningen 2.8.1 exactly, so I've
-copied that to `./lein`.
+Graal currently (rc10) has some issues with some of the bytecode that Clojure
+creates (see below), so we need to use a patched clojure and spec.alpha.  The
+`deps/build.sh` will build and install these into your local maven repository.
 
-At the moment, Graal doesn't deal well with the way Clojure generates bytecode
-from its 'locking' macro, so to build bytecode that Graal can handle, we need
-to apply https://dev.clojure.org/jira/secure/attachment/18767/clj-1472-3.patch[this patch].
-This issue is being tracked
-https://dev.clojure.org/jira/browse/CLJ-1472[here] and
-https://github.com/oracle/graal/issues/861[here].
-
-After applying the patch and invoking 'mvn install' for Clojure, you will need
-to clone, build, and install 'spec.alpha' with that version of Clojure.
-
-When that's done, you can update the versions of Clojure and spec.alpha
-referenced in the project.clj to match the snapshots you've just locally
-installed.
-
-Assuming you've already installed Graal VM and put it in the path, you should
-then be able to build the image:
-
-  $ ./lein native-image
+You will need at least, and possibly _exactly_, leiningen 2.8.3, due to how
+it attempts to side-load nREPL.  It is available as `deps/lein`.
+ 
+  $ deps/lein native-image
 
 You will find it in 'target/default+uberconf/rep'.
 
@@ -62,6 +48,15 @@ link this to Kakoiune's autoload directory, do the following:
   $ make install
 
 `rep` must be in the path for the plugin to work.
+
+== Graal/Bytecode Issues
+
+At the moment, Graal doesn't deal well with the way Clojure generates bytecode
+from its 'locking' macro, so to build bytecode that Graal can handle, we need
+to apply https://dev.clojure.org/jira/secure/attachment/18767/clj-1472-3.patch[this patch].
+This issue is being tracked
+https://dev.clojure.org/jira/browse/CLJ-1472[here] and
+https://github.com/oracle/graal/issues/861[here].
 
 == License
 
