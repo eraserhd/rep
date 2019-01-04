@@ -8,7 +8,7 @@ variables:
 jobs:
   build-and-test:
     docker:
-      - image: circleci/clojure:lein-2.8.1
+      - image: circleci/clojure:lein-2.8.3
     steps:
       - checkout
       - restore_cache:
@@ -17,7 +17,9 @@ jobs:
           name: Building patched dependencies
           command: |
             if ! [ -f deps/built ]; then
+                apt-get install -y patch
                 ./deps/build.sh
+                touch deps/built
             fi
       - run:
           name: Running tests

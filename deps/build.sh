@@ -66,5 +66,3 @@ EOF
     mvn install
     cd ../..
 fi
-
-touch deps/built
