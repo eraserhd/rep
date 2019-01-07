@@ -15,6 +15,9 @@ jobs:
       - run:
           name: Running tests
           command: deps/lein midje
+      - run:
+          name: Building Linux native-image
+          command: deps/lein native-image
       - save_cache:
           <<: *cache_config
 workflows:
