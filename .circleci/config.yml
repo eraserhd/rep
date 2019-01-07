@@ -1,7 +1,7 @@
 version: 2
 variables:
   cache_config: &cache_config
-    key: v2-rep-{{ checksum "project.clj" }}-{{ checksum "deps/build.sh" }}
+    key: v3-rep-{{ checksum "project.clj" }}
     paths:
       - ~/.m2
 jobs:
