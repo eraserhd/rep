@@ -3,7 +3,6 @@ variables:
   cache_config: &cache_config
     key: v2-rep-{{ checksum "project.clj" }}-{{ checksum "deps/build.sh" }}
     paths:
-      - deps
       - ~/.m2
 jobs:
   build-and-test:
@@ -14,17 +13,8 @@ jobs:
       - restore_cache:
           <<: *cache_config
       - run:
-          name: Building patched dependencies
-          command: |
-            if ! [ -f deps/built ]; then
-                ./deps/build.sh
-                touch deps/built
-            fi
-      - run:
           name: Running tests
-          command: |
-            source deps/path.sh
-            deps/lein midje
+          command: deps/lein midje
       - save_cache:
           <<: *cache_config
 workflows:
