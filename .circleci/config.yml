@@ -17,7 +17,6 @@ jobs:
           name: Building patched dependencies
           command: |
             if ! [ -f deps/built ]; then
-                sudo apt-get install -y patch
                 ./deps/build.sh
                 touch deps/built
             fi
