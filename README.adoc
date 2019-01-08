@@ -19,7 +19,8 @@ other limitations because of this?
 
 == Installation
 
-Download the latest MacOS binaries from the GitHub releases tab above.
+Download the latest Linux or MacOS binaries from the GitHub releases tab
+above.
 
 == Building with Graal
 
