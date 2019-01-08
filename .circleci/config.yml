@@ -21,12 +21,13 @@ jobs:
             eval "version=$(awk 'NR == 1{print $3}' project.clj)"
             package="rep-$version-linux-amd64"
             deps/lein native-image
-            mkdir -p dist/$package/
-            cp target/default+uberjar/rep dist/$package/rep
-            asciidoctor -b manpage -o dist/$package/rep.1 rep.1.adoc
-            ( cd dist && tar czf $package.tar.gz $package/ )
+            mkdir -p pkg/$package/ dist/
+            cp target/default+uberjar/rep pkg/$package/rep
+            asciidoctor -b manpage -o pkg/$package/rep.1 rep.1.adoc
+            ( cd pkg && tar czf ../dist/$package.tar.gz $package/ )
       - store_artifacts:
           path: dist
+          destination: /
       - save_cache:
           <<: *cache_config
 workflows:
