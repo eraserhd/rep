@@ -16,8 +16,15 @@ jobs:
           name: Running tests
           command: deps/lein midje
       - run:
-          name: Building Linux native-image
-          command: deps/lein native-image
+          name: Building Linux distribution
+          command: |
+            eval "version=$(awk 'NR == 1{print $3}' project.clj)"
+            package="rep-$version-linux-amd64"
+            deps/lein native-image
+            mkdir -p dist/$package/
+            cp target/default+uberjar/rep dist/$package/rep
+            asciidoctor -b manpage -o dist/$package/rep.1 rep.1.adoc
+            ( cd dist && tar czf $package.tar.gz $package/ )
       - save_cache:
           <<: *cache_config
 workflows:
