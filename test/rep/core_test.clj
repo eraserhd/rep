@@ -8,19 +8,21 @@
   (:import
     (java.io ByteArrayOutputStream OutputStreamWriter)))
 
+(defn- rep-args [args server]
+  (->> args
+    (remove map?)
+    (map (fn [arg]
+           (case arg
+             :<host+port> (str "localhost:" (:port server))
+             :<port>      (str (:port server))
+             arg)))))
+
 (defn- rep-fast-driver
   "A driver which does not expect the native image to be built."
   [& args]
   (let [server (binding [*file* nil]
                  (nrepl.server/start-server))
         starting-dir (System/getProperty "user.dir")
-        rep-args (->> args
-                      (remove map?)
-                      (map (fn [arg]
-                             (case arg
-                               :<host+port> (str "localhost:" (:port server))
-                               :<port>      (str (:port server))
-                               arg))))
         {:keys [port-file]
          :or {port-file ".nrepl-port"}}
         (first (filter map? args))]
@@ -31,7 +33,7 @@
             err (ByteArrayOutputStream.)]
         (let [exit-code (binding [*out* (OutputStreamWriter. out)
                                   *err* (OutputStreamWriter. err)]
-                          (apply rep.core/rep rep-args))]
+                          (apply rep.core/rep (rep-args args server)))]
           {:out (.toString out)
            :err (.toString err)
            :exit exit-code}))
@@ -45,19 +47,12 @@
   (let [server (binding [*file* nil]
                  (nrepl.server/start-server))
         starting-dir (System/getProperty "user.dir")
-        rep-args (->> args
-                      (remove map?)
-                      (map (fn [arg]
-                             (case arg
-                               :<host+port> (str "localhost:" (:port server))
-                               :<port>      (str (:port server))
-                               arg))))
         {:keys [port-file]
          :or {port-file ".nrepl-port"}}
         (first (filter map? args))]
     (try
       (spit (str starting-dir "/target/" port-file) (str (:port server)))
-      (apply sh "default+uberjar/rep" (concat rep-args [:dir (io/file (str starting-dir "/target"))]))
+      (apply sh "default+uberjar/rep" (concat (rep-args args server) [:dir (io/file (str starting-dir "/target"))]))
       (finally
         (nrepl.server/stop-server server)))))
 
