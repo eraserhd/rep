@@ -17,44 +17,46 @@
              :<port>      (str (:port server))
              arg)))))
 
+(defmacro ^:private with-nrepl-server [name & body]
+  `(let [~name (binding [*file* nil]
+                 (nrepl.server/start-server))]
+     (try
+       ~@body
+       (finally
+         (nrepl.server/stop-server ~name)))))
+
 (defn- rep-fast-driver
   "A driver which does not expect the native image to be built."
   [& args]
-  (let [server (binding [*file* nil]
-                 (nrepl.server/start-server))
-        starting-dir (System/getProperty "user.dir")
+  (let [starting-dir (System/getProperty "user.dir")
         {:keys [port-file]
          :or {port-file ".nrepl-port"}}
         (first (filter map? args))]
-    (try
-      (System/setProperty "user.dir" (str starting-dir "/target"))
-      (spit (str starting-dir "/target/" port-file) (str (:port server)))
-      (let [out (ByteArrayOutputStream.)
-            err (ByteArrayOutputStream.)]
-        (let [exit-code (binding [*out* (OutputStreamWriter. out)
-                                  *err* (OutputStreamWriter. err)]
-                          (apply rep.core/rep (rep-args args server)))]
-          {:out (.toString out)
-           :err (.toString err)
-           :exit exit-code}))
-      (finally
-        (System/setProperty "user.dir" starting-dir)
-        (nrepl.server/stop-server server)))))
+    (with-nrepl-server server
+      (try
+        (System/setProperty "user.dir" (str starting-dir "/target"))
+        (spit (str starting-dir "/target/" port-file) (str (:port server)))
+        (let [out (ByteArrayOutputStream.)
+              err (ByteArrayOutputStream.)]
+          (let [exit-code (binding [*out* (OutputStreamWriter. out)
+                                    *err* (OutputStreamWriter. err)]
+                            (apply rep.core/rep (rep-args args server)))]
+            {:out (.toString out)
+             :err (.toString err)
+             :exit exit-code}))
+        (finally
+          (System/setProperty "user.dir" starting-dir))))))
 
 (defn- rep-native-driver
   "An integration driver which runs the `rep` binary."
   [& args]
-  (let [server (binding [*file* nil]
-                 (nrepl.server/start-server))
-        starting-dir (System/getProperty "user.dir")
+  (let [starting-dir (System/getProperty "user.dir")
         {:keys [port-file]
          :or {port-file ".nrepl-port"}}
         (first (filter map? args))]
-    (try
+    (with-nrepl-server server
       (spit (str starting-dir "/target/" port-file) (str (:port server)))
-      (apply sh "default+uberjar/rep" (concat (rep-args args server) [:dir (io/file (str starting-dir "/target"))]))
-      (finally
-        (nrepl.server/stop-server server)))))
+      (apply sh "default+uberjar/rep" (concat (rep-args args server) [:dir (io/file (str starting-dir "/target"))])))))
 
 (def ^:dynamic rep
   (if (= "native" (System/getenv "REP_TEST_DRIVER"))
