@@ -25,9 +25,13 @@ Download the latest MacOS binaries from the GitHub releases tab above.
 
 This is a somewhat graaling process right now, so bear with me.
 
+You'll first need to install https://www.graalvm.org/downloads/[GraalVM].
+
 Graal currently (rc10) has some issues with some of the bytecode that Clojure
 creates (see below), so we need to use a patched clojure and spec.alpha.  The
-`deps/build.sh` will build and install these into your local maven repository.
+`.circleci/images/primary/build.sh` script will build and install these into
+your local maven repository.  The script requires a
+https://maven.apache.org/download.cgi[maven] install.
 
 You will need at least, and possibly _exactly_, leiningen 2.8.3, due to how
 it attempts to side-load nREPL.  It is available as `deps/lein`.
