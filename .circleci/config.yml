@@ -26,7 +26,7 @@ jobs:
             asciidoctor -b manpage -o dist/$package/rep.1 rep.1.adoc
             ( cd dist && tar czf $package.tar.gz $package/ )
       - store_artifacts:
-          path: dist/rep-*.tar.gz
+          path: dist
       - save_cache:
           <<: *cache_config
 workflows:
