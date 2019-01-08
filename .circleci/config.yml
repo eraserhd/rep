@@ -14,7 +14,7 @@ jobs:
           <<: *cache_config
       - run:
           name: Running tests
-          command: deps/lein midje
+          command: REP_TEST_DRIVER=fast deps/lein midje
       - run:
           name: Building Linux package
           command: |
@@ -25,6 +25,9 @@ jobs:
             cp target/default+uberjar/rep pkg/$package/rep
             asciidoctor -b manpage -o pkg/$package/rep.1 rep.1.adoc
             ( cd pkg && tar czf ../dist/$package.tar.gz $package/ )
+      - run:
+          name: Testing Linux binary
+          command: REP_TEST_DRIVER=native deps/lein midje
       - store_artifacts:
           path: dist
           destination: /

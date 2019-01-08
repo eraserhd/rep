@@ -1,12 +1,15 @@
 (ns rep.core-test
   (:require
+    [clojure.java.shell :refer [sh]]
+    [clojure.java.io :as io]
     [midje.sweet :refer :all]
     [nrepl.server]
     [rep.core])
   (:import
     (java.io ByteArrayOutputStream OutputStreamWriter)))
 
-(defn- rep
+(defn- rep-fast-driver
+  "A driver which does not expect the native image to be built."
   [& args]
   (let [server (binding [*file* nil]
                  (nrepl.server/start-server))
@@ -29,22 +32,49 @@
         (let [exit-code (binding [*out* (OutputStreamWriter. out)
                                   *err* (OutputStreamWriter. err)]
                           (apply rep.core/rep rep-args))]
-          {:stdout (.toString out)
-           :stderr (.toString err)
-           :exit-code exit-code}))
+          {:out (.toString out)
+           :err (.toString err)
+           :exit exit-code}))
       (finally
         (System/setProperty "user.dir" starting-dir)
         (nrepl.server/stop-server server)))))
 
+(defn- rep-native-driver
+  "An integration driver which runs the `rep` binary."
+  [& args]
+  (let [server (binding [*file* nil]
+                 (nrepl.server/start-server))
+        starting-dir (System/getProperty "user.dir")
+        rep-args (->> args
+                      (remove map?)
+                      (map (fn [arg]
+                             (case arg
+                               :<host+port> (str "localhost:" (:port server))
+                               :<port>      (str (:port server))
+                               arg))))
+        {:keys [port-file]
+         :or {port-file ".nrepl-port"}}
+        (first (filter map? args))]
+    (try
+      (spit (str starting-dir "/target/" port-file) (str (:port server)))
+      (apply sh "default+uberjar/rep" (concat rep-args [:dir (io/file (str starting-dir "/target"))]))
+      (finally
+        (nrepl.server/stop-server server)))))
+
+(def ^:dynamic rep
+  (if (= "native" (System/getenv "REP_TEST_DRIVER"))
+    rep-native-driver
+    rep-fast-driver))
+
 (defn- prints [s & flags]
   (let [flags (into #{} flags)
         k (if (flags :to-stderr)
-            :stderr
-            :stdout)]
+            :err
+            :out)]
     (contains {k s})))
 
 (defn- exits-with [code]
-  (contains {:exit-code code}))
+  (contains {:exit code}))
 
 (facts "about basic evaluation of code"
   (rep "(+ 2 2)")                                  => (prints "4\n")
