@@ -1,4 +1,4 @@
-FROM oracle/graalvm-ce:1.0.0-rc10
+FROM oracle/graalvm-ce:1.0.0-rc11
 
 RUN yum install -y git ssh ca-certificates patch asciidoctor
 
