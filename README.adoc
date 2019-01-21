@@ -28,7 +28,7 @@ This is a somewhat graaling process right now, so bear with me.
 
 You'll first need to install https://www.graalvm.org/downloads/[GraalVM].
 
-Graal currently (rc10) has some issues with some of the bytecode that Clojure
+Graal currently (rc11) has some issues with some of the bytecode that Clojure
 creates (see below), so we need to use a patched clojure and spec.alpha.  The
 `.circleci/images/primary/build.sh` script will build and install these into
 your local maven repository.  The script requires a
