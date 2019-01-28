@@ -4,6 +4,10 @@ Change Log
 https://github.com/eraserhd/rep/compare/0.1.1...HEAD[Unreleased]
 ----------------------------------------------------------------
 
+=== Kakoune
+
+* `,eR` replaces selection with its evaluted result.
+
 https://github.com/eraserhd/rep/compare/0.1.0...0.1.1[v0.1.0] - 2019-01-08
 --------------------------------------------------------------------------
 

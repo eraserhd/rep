@@ -83,7 +83,18 @@ define-command \
     echo -- "%opt{rep_evaluate_output}"
 }
 
+define-command \
+    -docstring %{rep-replace-selection: Evaluate selection and replace with result.} \
+    rep-replace-selection %{
+    rep-evaluate-selection -namespace user
+    evaluate-commands -save-regs r %{
+        set-register r "%opt{rep_evaluate_output}"
+        execute-keys '"rR'
+    }
+}
+
 declare-user-mode rep
 map global user e ': enter-user-mode rep<ret>'
 map -docstring 'evaluate the selection in the REPL' global rep e ': rep-evaluate-selection<ret>'
-map -docstring 'evaluate this file in the REPL' global rep f ': rep-evaluate-file<ret>'
+map -docstring 'evaluate this file in the REPL'     global rep f ': rep-evaluate-file<ret>'
+map -docstring 'replace selection with result'      global rep R ': rep-replace-selection<ret>'
