@@ -28,13 +28,13 @@
       (System/setProperty "user.dir" (str starting-dir "/target"))
       (spit (str starting-dir "/target/" port-file) (str (:port server)))
       (let [out (ByteArrayOutputStream.)
-            err (ByteArrayOutputStream.)]
-        (let [exit-code (binding [*out* (OutputStreamWriter. out)
-                                  *err* (OutputStreamWriter. err)]
-                          (apply rep.core/rep (rep-args args server)))]
-          {:out (.toString out)
-           :err (.toString err)
-           :exit exit-code}))
+            err (ByteArrayOutputStream.)
+            exit-code (binding [*out* (OutputStreamWriter. out)
+                                *err* (OutputStreamWriter. err)]
+                        (apply rep.core/rep (rep-args args server)))]
+        {:out (.toString out)
+         :err (.toString err)
+         :exit exit-code})
       (finally
         (System/setProperty "user.dir" starting-dir)))))
 
