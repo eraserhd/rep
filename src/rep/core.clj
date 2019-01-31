@@ -94,6 +94,9 @@
 (defn- add-print-argument [opts _ [k [fd fmt]]]
   (update opts :print assoc k [fd fmt]))
 
+(defn- remove-print-key [opts _ k]
+  (update opts :print dissoc k))
+
 (def ^:private cli-options
   [["-l" "--line LINE[:COLUMN]"     "Specify code's starting LINE and COLUMN."
     :parse-fn parse-line-argument
@@ -101,6 +104,9 @@
     :default-desc "1"]
    ["-n" "--namespace NS"           "Evaluate expressions in NS."
     :default "user"]
+   [nil "--no-print KEY"            "Do not print KEY from messages."
+    :parse-fn keyword
+    :assoc-fn remove-print-key]
    [nil "--op OP"                   "Send OP as the nREPL operation."
     :default "eval"]
    ["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
