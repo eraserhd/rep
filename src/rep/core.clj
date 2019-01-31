@@ -25,23 +25,28 @@
   [status]
   (take-until #(contains? (into #{} (:status %)) status)))
 
-(defn- effecting
-  "Build an effectful transucer which operates on the `k` value in messages."
-  [k effect-fn]
+(defn- printing-key
+  "Build an effectful transucer which prints the `k` value in messages."
+  [k fd fmt]
   (fn [rf]
     (fn
       ([] (rf))
       ([result] (rf result))
       ([result input]
        (when (contains? input k)
-         (effect-fn (get input k)))
+         (let [^java.io.Writer out (case fd
+                                     1 *out*
+                                     2 *err*)]
+           (.write out (format fmt (get input k)))
+           (.flush out)))
        (rf result input)))))
 
-(defn- print-err
-  [^String s]
-  (let [^java.io.Writer w *err*]
-    (.write w s)
-    (.flush w)))
+(defn- printing
+  "Build an effectful transducer which prints the keys in m."
+  [m]
+  (->> m
+    (map (fn [[k [fd fmt]]] (printing-key k fd fmt)))
+    (apply comp)))
 
 (defn- report-exceptions
   [rf]
@@ -77,6 +82,18 @@
                               {:file file
                                :line 1})))
 
+(defn- parse-print-argument [arg]
+  (condp re-matches arg
+    #"([^,]*),(\d+),(.*)" :>> (fn [[_ k fd fmt]]
+                                [(keyword k) [(Long/parseLong fd) fmt]])
+    #"([^,]*),(\d+)"      :>> (fn [[_ k fd]]
+                                [(keyword k) [(Long/parseLong fd) "%s"]])
+    #"([^,]*)"            :>> (fn [[_ k]]
+                                [(keyword k) [1 "%s"]])))
+
+(defn- add-print-argument [opts _ [k [fd fmt]]]
+  (update opts :print assoc k [fd fmt]))
+
 (def ^:private cli-options
   [["-l" "--line LINE[:COLUMN]"     "Specify code's starting LINE and COLUMN."
     :parse-fn parse-line-argument
@@ -84,10 +101,17 @@
     :default-desc "1"]
    ["-n" "--namespace NS"           "Evaluate expressions in NS."
     :default "user"]
-   ["" "--op OP"                    "Send OP as the nREPL operation."
+   [nil "--op OP"                   "Send OP as the nREPL operation."
     :default "eval"]
    ["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
     :default "@.nrepl-port"]
+   [nil "--print KEY[,FD[,FORMAT]]" "Print KEY from response messages to FD using FORMAT."
+    :default {:out [1 "%s"]
+              :err [2 "%s"]
+              :value [1 "%s\n"]}
+    :default-desc ["out,1,%s", "err,2,%s\n", "value,1,%s\\n"]
+    :parse-fn parse-print-argument
+    :assoc-fn add-print-argument]
    ["-h" "--help"                   "Show this help screen."]])
 
 (defmulti command
@@ -139,9 +163,7 @@
         result (transduce
                  (comp
                    (until-status "done")
-                   (effecting :out print)
-                   (effecting :err print-err)
-                   (effecting :value println)
+                   (printing (:print options))
                    report-exceptions)
                  null-reducer
                  {:exit-code 0}

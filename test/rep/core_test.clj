@@ -47,3 +47,7 @@
 (facts "about specifying the operation"
   (rep "--op=eval" "(+ 1 2)") => (prints "3\n")
   (rep "--op=rep-test-op") => (prints "\"hello\"\n"))
+
+(facts "about printing responses"
+  (rep "--print=foo-key" "(+ 1 1)") => (prints "2\n")
+  (rep "--print=value,2,>%s<" "(+ 1 1)") => (prints ">2<" :to-stderr))
