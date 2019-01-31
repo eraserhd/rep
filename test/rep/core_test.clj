@@ -52,4 +52,5 @@
   (rep "--print=foo-key" "(+ 1 1)") => (prints "2\n")
   (rep "--print=value,1,%s\n" "(+ 2 3)") => (prints "5\n")
   (rep "--print=value,2,>%s<" "(+ 1 1)") => (prints ">2<" :to-stderr)
-  (rep "--no-print=value" "(+ 1 1)") =not=> (prints "2\n"))
+  (rep "--no-print=value" "(+ 1 1)") =not=> (prints "2\n")
+  (rep "--op=ls-sessions" "--print=sessions") => (prints #"^\[\""))
