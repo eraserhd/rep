@@ -84,12 +84,12 @@
 
 (defn- parse-print-argument [arg]
   (condp re-matches arg
-    #"([^,]*),(\d+),(.*)" :>> (fn [[_ k fd fmt]]
-                                [(keyword k) [(Long/parseLong fd) fmt]])
-    #"([^,]*),(\d+)"      :>> (fn [[_ k fd]]
-                                [(keyword k) [(Long/parseLong fd) "%s"]])
-    #"([^,]*)"            :>> (fn [[_ k]]
-                                [(keyword k) [1 "%s"]])))
+    #"(?s)([^,]*),(\d+),(.*)" :>> (fn [[_ k fd fmt]]
+                                    [(keyword k) [(Long/parseLong fd) fmt]])
+    #"([^,]*),(\d+)"          :>> (fn [[_ k fd]]
+                                    [(keyword k) [(Long/parseLong fd) "%s"]])
+    #"([^,]*)"                :>> (fn [[_ k]]
+                                    [(keyword k) [1 "%s"]])))
 
 (defn- add-print-argument [opts _ [k [fd fmt]]]
   (update opts :print assoc k [fd fmt]))
