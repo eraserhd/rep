@@ -84,6 +84,8 @@
     :default-desc "1"]
    ["-n" "--namespace NS"           "Evaluate expressions in NS."
     :default "user"]
+   ["" "--op OP"                    "Send OP as the nREPL operation."
+    :default "eval"]
    ["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
     :default "@.nrepl-port"]
    ["-h" "--help"                   "Show this help screen."]])
@@ -131,7 +133,7 @@
         client (nrepl/client conn 60000)
         session (nrepl/client-session client)
         msg-seq (session (merge (:line options)
-                                {:op "eval"
+                                {:op (:op options)
                                  :ns (:namespace options)
                                  :code (apply str arguments)}))
         result (transduce

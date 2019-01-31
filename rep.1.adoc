@@ -36,6 +36,9 @@ connection, meaning that thread-local variables and bindings like `*e` and
     Evaluate code in NS.  'ns' forms themselves should be evaluated in 'user'
     in case they don't already exist.  'user' is the default.
 
+*--op*=OP::
+    Specify an nREPL operation.  The default is "eval".
+
 *-p, --port*='@FILE|[HOST:]PORT'::
     Specify the nREPL 'PORT' and possibly 'HOST'.  If 'FILE' is given, the
     host and port are read from a file.  If 'HOST' is not given, 'localhost'

@@ -4,6 +4,10 @@ Change Log
 https://github.com/eraserhd/rep/compare/0.1.1...HEAD[Unreleased]
 ----------------------------------------------------------------
 
+=== Added
+
+* Add --op to specify an operation other than "eval".
+
 === Kakoune
 
 * `,eR` replaces selection with its evaluted result.

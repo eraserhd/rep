@@ -3,7 +3,9 @@
     [clojure.java.shell :refer [sh]]
     [clojure.java.io :as io]
     [midje.sweet :refer :all]
+    [nrepl.misc :refer [response-for]]
     [nrepl.server]
+    [nrepl.transport :as t]
     [rep.core])
   (:import
     (java.io ByteArrayOutputStream OutputStreamWriter)))
@@ -53,9 +55,18 @@
     rep-native-driver
     rep-fast-driver))
 
+(defn- wrap-rep-test-op [f]
+  (fn [{:keys [op transport] :as message}]
+    (if (= "rep-test-op" op)
+      (t/send transport (response-for message :status :done :value (pr-str "hello")))
+      (f message))))
+
+(def ^:private handler
+  (nrepl.server/default-handler wrap-rep-test-op))
+
 (defn rep [& args]
   (let [server (binding [*file* nil]
-                 (nrepl.server/start-server))]
+                 (nrepl.server/start-server :handler handler))]
     (try
       (apply *driver* server args)
       (finally

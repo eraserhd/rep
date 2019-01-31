@@ -43,3 +43,7 @@
   (rep "-l" "foo.clj:18:11" "(do (def foo) (meta #'foo))") => (prints #":file \"foo.clj\"")
   (rep "-l" "foo.clj:18:11" "(do (def foo) (meta #'foo))") => (prints #":line 18")
   (rep "-l" "foo.clj:18:11" "(do (def foo) (meta #'foo))") => (prints #":column 15"))
+
+(facts "about specifying the operation"
+  (rep "--op=eval" "(+ 1 2)") => (prints "3\n")
+  (rep "--op=rep-test-op") => (prints "\"hello\"\n"))
