@@ -67,17 +67,17 @@
 (defn- parse-line-argument [arg]
   (condp re-matches arg
     #"(.*):(\d+):(\d+)" :>> (fn [[_ file line column]]
-                             {:file file
-                              :line (Long/parseLong line)
-                              :column (Long/parseLong column)})
+                              {:file file
+                               :line (Long/parseLong line)
+                               :column (Long/parseLong column)})
     #"(\d+):(\d+)"      :>> (fn [[_ line column]]
-                             {:line (Long/parseLong line)
-                              :column (Long/parseLong column)})
+                              {:line (Long/parseLong line)
+                               :column (Long/parseLong column)})
     #"(.*):(\d+)"       :>> (fn [[_ file line]]
-                             {:file file
-                              :line (Long/parseLong line)})
+                              {:file file
+                               :line (Long/parseLong line)})
     #"(\d+)"            :>> (fn [[_ line]]
-                             {:line (Long/parseLong line)})
+                              {:line (Long/parseLong line)})
     #"(.*)"             :>> (fn [[_ file]]
                               {:file file
                                :line 1})))
