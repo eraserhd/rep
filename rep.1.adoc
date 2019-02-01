@@ -81,6 +81,9 @@ connection, meaning that thread-local variables and bindings like `*e` and
 `rep --op=slurp --send=url,string,http://eraserhead.net/ --print=body`::
     Use CIDER's "slurp" operation to retrieve http://eraserhead.net/.
 
+`rep --op=format-code "(if true\n(+ 1 1) 42)" --print=formatted-code`::
+    Use CIDER's "format-code" operation.
+
 == EXIT STATUS
 *0*::
     Success
