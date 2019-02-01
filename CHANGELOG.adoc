@@ -6,10 +6,10 @@ https://github.com/eraserhd/rep/compare/0.1.1...HEAD[Unreleased]
 
 === Added
 
-* Add --op to specify an operation other than "eval".
-* Add --print to specify additional keys in response messages to print.
-* Add --no-print to suppress printing of keys in response messages.
-* Add --send to send additional keys in nREPL request messages.
+* Add `--op` to specify an operation other than "eval".
+* Add `--print` and `--no-print` options to specify additional keys in
+  response messages to print.
+* Add `--send` to send additional keys in request messages.
 
 === Kakoune
 
@@ -20,8 +20,8 @@ https://github.com/eraserhd/rep/compare/0.1.0...0.1.1[v0.1.0] - 2019-01-08
 
 === Added
 
-* Add -n, --namespace option to specify the namespace of evaluated code.
-* Add -l, --line option to specify the file, line number, and column of
+* Add `-n`, `--namespace` option to specify the namespace of evaluated code.
+* Add `-l`, `--line` option to specify the file, line number, and column of
   evaluated code.
 * Now releasing Linux binaries (thanks Circle CI!)
 * Documentation updatings, including an example of how an editor might invoke

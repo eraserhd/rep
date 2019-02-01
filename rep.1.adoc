@@ -50,11 +50,12 @@ connection, meaning that thread-local variables and bindings like `*e` and
     nREPL if it was invoked by Leiningen.
 
 *--print*=KEY[,FD[,FORMAT]]::
-    Print KEY in response messages to FD, using FORMAT.  If FORMAT has a `%s`
-    in it, it is replaced with the value of KEY.  If FD is omitted, 1 (stdout)
-    is used.  If FORMAT is omitted, `%s` is used.  By default, `out` is
-    printed to stdout, `err` is printed to stderr, and `value` is printed to
-    stdout with a trailing newline.  (See also *--no-print*.)
+    Print response messages with KEY in them to FD, using FORMAT.  In FORMAT,
+    `%{key}` prints *key* from the response message, `%%` prints a literal
+    `%`, and `%n` prints a newline.  If FD is omitted, 1 (stdout) is used.  If
+    FORMAT is omitted, `%{KEY}` is used.  Multiple *--print* options can be
+    specified and they are collected (see also *--no-print*).  The defaults
+    are `out,1,%{out}`, `err,2,%{err}`, and `value,1,%{value}%n`.
 
 *--send*=KEY,TYPE,VALUE::
     Send KEY in request message with VALUE.  TYPE can be either `string` or

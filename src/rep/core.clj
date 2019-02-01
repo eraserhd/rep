@@ -1,7 +1,8 @@
 (ns rep.core
   (:require
    [clojure.tools.cli :as cli]
-   [nrepl.core :as nrepl])
+   [nrepl.core :as nrepl]
+   [rep.format :as format])
   (:import
    (java.io File))
   (:gen-class))
@@ -37,7 +38,7 @@
          (let [^java.io.Writer out (case fd
                                      1 *out*
                                      2 *err*)]
-           (.write out (format fmt (get input k)))
+           (.write out (format/format fmt input))
            (.flush out)))
        (rf result input)))))
 
@@ -87,9 +88,9 @@
     #"(?s)([^,]*),(\d+),(.*)" :>> (fn [[_ k fd fmt]]
                                     [(keyword k) [(Long/parseLong fd) fmt]])
     #"([^,]*),(\d+)"          :>> (fn [[_ k fd]]
-                                    [(keyword k) [(Long/parseLong fd) "%s"]])
+                                    [(keyword k) [(Long/parseLong fd) (str "%{" k "}")]])
     #"([^,]*)"                :>> (fn [[_ k]]
-                                    [(keyword k) [1 "%s"]])))
+                                    [(keyword k) [1 (str "%{" k "}")]])))
 
 (defn- add-print-argument [opts _ [k [fd fmt]]]
   (update opts :print assoc k [fd fmt]))
@@ -124,10 +125,10 @@
    ["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
     :default "@.nrepl-port"]
    [nil "--print KEY[,FD[,FORMAT]]" "Print KEY from response messages to FD using FORMAT."
-    :default {:out [1 "%s"]
-              :err [2 "%s"]
-              :value [1 "%s\n"]}
-    :default-desc ["out,1,%s", "err,2,%s\n", "value,1,%s\\n"]
+    :default {:out [1 "%{out}"]
+              :err [2 "%{err}"]
+              :value [1 "%{value}%n"]}
+    :default-desc ["out,1,%{name}", "err,2,%{err}", "value,1,%{value}%n"]
     :parse-fn parse-print-argument
     :assoc-fn add-print-argument]
    [nil "--send KEY,TYPE,VALUE"     "Send KEY: VALUE in request."
