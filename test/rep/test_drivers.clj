@@ -58,7 +58,15 @@
 (defn- wrap-rep-test-op [f]
   (fn [{:keys [op transport] :as message}]
     (if (= "rep-test-op" op)
-      (t/send transport (response-for message :status :done :value (pr-str "hello")))
+      (let [value (str
+                    (if-let [foo (:foo message)]
+                      (format "foo=%s;" (pr-str foo))
+                      "")
+                    (if-let [bar (:bar message)]
+                      (format "bar=%s;" (pr-str bar))
+                      "")
+                    (pr-str "hello"))]
+        (t/send transport (response-for message :status :done :value value)))
       (f message))))
 
 (def ^:private handler

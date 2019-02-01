@@ -56,6 +56,10 @@ connection, meaning that thread-local variables and bindings like `*e` and
     printed to stdout, `err` is printed to stderr, and `value` is printed to
     stdout with a trailing newline.  (See also *--no-print*.)
 
+*--send*=KEY,TYPE,VALUE::
+    Send KEY in request message with VALUE.  TYPE can be either `string` or
+    `integer`.
+
 == EXAMPLES
 `rep '(+ 2 2)'`::
     Evaluate a simple expression in the running nREPL server and print its
@@ -73,6 +77,9 @@ connection, meaning that thread-local variables and bindings like `*e` and
 
 `rep --op=list-sessions --print=sessions`::
     Print the list of the active nREPL sessions.
+
+`rep --op=slurp --send=url,string,http://eraserhead.net/ --print=body`::
+    Use CIDER's "slurp" operation to retrieve http://eraserhead.net/.
 
 == EXIT STATUS
 *0*::

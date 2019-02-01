@@ -97,8 +97,20 @@
 (defn- remove-print-key [opts _ k]
   (update opts :print dissoc k))
 
+(defn- parse-send-argument [arg]
+  (condp re-matches arg
+    #"(?s)([^,]+),(string|integer),(.*)" :>> (fn [[_ k ty v]]
+                                               [(keyword k)
+                                                (case ty
+                                                  "string"  v
+                                                  "integer" (Long/parseLong v))])))
+
+(defn- add-send-argument [opts _ [k v]]
+  (update opts :send assoc k v))
+
 (def ^:private cli-options
-  [["-l" "--line LINE[:COLUMN]"     "Specify code's starting LINE and COLUMN."
+  [["-h" "--help"                   "Show this help screen."]
+   ["-l" "--line LINE[:COLUMN]"     "Specify code's starting LINE and COLUMN."
     :parse-fn parse-line-argument
     :default (parse-line-argument "1")
     :default-desc "1"]
@@ -118,7 +130,11 @@
     :default-desc ["out,1,%s", "err,2,%s\n", "value,1,%s\\n"]
     :parse-fn parse-print-argument
     :assoc-fn add-print-argument]
-   ["-h" "--help"                   "Show this help screen."]])
+   [nil "--send KEY,TYPE,VALUE"     "Send KEY: VALUE in request."
+    :default {}
+    :default-desc ""
+    :parse-fn parse-send-argument
+    :assoc-fn add-send-argument]])
 
 (defmulti command
   (fn [opts]
@@ -163,6 +179,7 @@
         client (nrepl/client conn 60000)
         session (nrepl/client-session client)
         msg-seq (session (merge (:line options)
+                                (:send options)
                                 {:op (:op options)
                                  :ns (:namespace options)
                                  :code (apply str arguments)}))

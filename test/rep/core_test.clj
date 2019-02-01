@@ -54,3 +54,7 @@
   (rep "--print=value,2,>%s<" "(+ 1 1)") => (prints ">2<" :to-stderr)
   (rep "--no-print=value" "(+ 1 1)") =not=> (prints "2\n")
   (rep "--op=ls-sessions" "--print=sessions") => (prints #"^\[\""))
+
+(facts "about sending additional fields"
+  (rep "--op=rep-test-op" "--send=foo,string,quux") => (prints "foo=\"quux\";\"hello\"\n")
+  (rep "--op=rep-test-op" "--send=bar,integer,42")  => (prints "bar=42;\"hello\"\n"))
