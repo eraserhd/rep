@@ -27,7 +27,7 @@
 
 (defn- printing-key
   "Build an effectful transucer which prints the `k` value in messages."
-  [k fd fmt]
+  [k ^long fd fmt]
   (fn [rf]
     (fn
       ([] (rf))
