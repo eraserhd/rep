@@ -7,8 +7,8 @@ https://github.com/eraserhd/rep/compare/0.1.1...HEAD[Unreleased]
 === Added
 
 * Add `--op` to specify an operation other than "eval".
-* Add `--print` and `--no-print` options to specify additional keys in
-  response messages to print.
+* Add `--print` option to specify which keys in response messages to print
+  and how.
 * Add `--send` to send additional keys in request messages.
 
 === Kakoune

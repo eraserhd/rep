@@ -28,25 +28,25 @@
 
 (defn- printing-key
   "Build an effectful transucer which prints the `k` value in messages."
-  [k ^long fd fmt]
+  [{:keys [key ^long fd format]}]
   (fn [rf]
     (fn
       ([] (rf))
       ([result] (rf result))
       ([result input]
-       (when (contains? input k)
+       (when (contains? input key)
          (let [^java.io.Writer out (case fd
                                      1 *out*
                                      2 *err*)]
-           (.write out (format/format fmt input))
+           (.write out (format/format format input))
            (.flush out)))
        (rf result input)))))
 
 (defn- printing
   "Build an effectful transducer which prints the keys in m."
-  [m]
-  (->> m
-    (map (fn [[k [fd fmt]]] (printing-key k fd fmt)))
+  [print-specs]
+  (->> print-specs
+    (map printing-key)
     (apply comp)))
 
 (defn- report-exceptions
@@ -86,17 +86,27 @@
 (defn- parse-print-argument [arg]
   (condp re-matches arg
     #"(?s)([^,]*),(\d+),(.*)" :>> (fn [[_ k fd fmt]]
-                                    [(keyword k) [(Long/parseLong fd) fmt]])
+                                    {:key (keyword k)
+                                     :fd (Long/parseLong fd)
+                                     :format fmt})
     #"([^,]*),(\d+)"          :>> (fn [[_ k fd]]
-                                    [(keyword k) [(Long/parseLong fd) (str "%{" k "}")]])
+                                    {:key (keyword k)
+                                     :fd (Long/parseLong fd)
+                                     :format (str "%{" k "}")})
     #"([^,]*)"                :>> (fn [[_ k]]
-                                    [(keyword k) [1 (str "%{" k "}")]])))
+                                    {:key (keyword k)
+                                     :fd 1
+                                     :format (str "%{" k "}")})))
 
-(defn- add-print-argument [opts _ [k [fd fmt]]]
-  (update opts :print assoc k [fd fmt]))
-
-(defn- remove-print-key [opts _ k]
-  (update opts :print dissoc k))
+(defn- add-print-argument [opts _ spec]
+  (update opts
+          :print
+          (fn [specs]
+            (-> (remove (fn [{:keys [key default?]}]
+                          (and default? (= key (:key spec))))
+                        specs)
+              vec
+              (conj spec)))))
 
 (defn- parse-send-argument [arg]
   (condp re-matches arg
@@ -117,17 +127,14 @@
     :default-desc "1"]
    ["-n" "--namespace NS"           "Evaluate expressions in NS."
     :default "user"]
-   [nil "--no-print KEY"            "Do not print KEY from messages."
-    :parse-fn keyword
-    :assoc-fn remove-print-key]
    [nil "--op OP"                   "Send OP as the nREPL operation."
     :default "eval"]
    ["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
     :default "@.nrepl-port"]
    [nil "--print KEY[,FD[,FORMAT]]" "Print KEY from response messages to FD using FORMAT."
-    :default {:out [1 "%{out}"]
-              :err [2 "%{err}"]
-              :value [1 "%{value}%n"]}
+    :default [{:key :out, :fd 1, :format "%{out}", :default? true}
+              {:key :err, :fd 2, :format "%{err}", :default? true}
+              {:key :value, :fd 1, :format "%{value}%n", :default? true}]
     :default-desc ["out,1,%{name}", "err,2,%{err}", "value,1,%{value}%n"]
     :parse-fn parse-print-argument
     :assoc-fn add-print-argument]

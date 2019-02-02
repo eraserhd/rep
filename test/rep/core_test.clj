@@ -48,13 +48,19 @@
   (rep "--op=eval" "(+ 1 2)") => (prints "3\n")
   (rep "--op=rep-test-op") => (prints "\"hello\"\n"))
 
-(facts "about printing responses"
-  (rep "--print=foo-key" "(+ 1 1)") => (prints "2\n")
-  (rep "--print=value,1,%{value}%n" "(+ 2 3)") => (prints "5\n")
-  (rep "--print=value,2,>%{value}<" "(+ 1 1)") => (prints ">2<" :to-stderr)
-  (rep "--no-print=value" "(+ 1 1)") =not=> (prints "2\n")
-  (rep "--op=ls-sessions" "--print=sessions") => (prints #"^\[\""))
+(facts "about --print"
+  (fact "it can print arbitrary keys"
+    (rep "--print=foo-key" "(+ 1 1)") => (prints "2\n"))
+  (fact "it overrides any default formats the first time given"
+    (rep "--print=value,1,-%{value}-%n" "(+ 2 3)") => (prints "-5-\n"))
+  (fact "it can print to stderr"
+    (rep "--print=value,2,>%{value}<" "(+ 1 1)") => (prints ">2<" :to-stderr))
+  (fact "it can be given multiple times for one KEY"
+    (rep "--print=value,1,<%{value}>" "--print=value,1,<<%{value}>>" "2") => (prints #"<2><<2>>")))
 
 (facts "about sending additional fields"
   (rep "--op=rep-test-op" "--send=foo,string,quux") => (prints "foo=\"quux\";\"hello\"\n")
   (rep "--op=rep-test-op" "--send=bar,integer,42")  => (prints "bar=42;\"hello\"\n"))
+
+(facts "about the examples in the documentation"
+  (rep "--op=ls-sessions" "--print=sessions") => (prints #"^\[\""))
