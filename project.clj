@@ -13,7 +13,7 @@
   :native-image {:name "rep"
                  :opts ["--verbose"
                         "--no-server"
-                        "-Xmx3g"
+                        "-J-Xmx3g"
                         "--report-unsupported-elements-at-runtime"
                         "-H:ReflectionConfigurationFiles=reflectconfig.json"]}
   :target-path "target/%s"
