@@ -37,8 +37,9 @@
        (when (contains? input key)
          (let [^java.io.Writer out (case fd
                                      1 *out*
-                                     2 *err*)]
-           (.write out (format/format format input))
+                                     2 *err*)
+               text ^String (format/format format input)]
+           (.write out text)
            (.flush out)))
        (rf result input)))))
 
