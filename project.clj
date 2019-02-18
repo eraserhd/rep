@@ -1,4 +1,4 @@
-(defproject rep "0.1.2-SNAPSHOT"
+(defproject rep "0.1.2"
   :description "Single-shot REPL (hence no 'L')"
   :url "https://github.com/eraserhd/rep"
   :license {:name "Eclipse Public License"
