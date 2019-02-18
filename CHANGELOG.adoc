@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+https://github.com/eraserhd/rep/compare/v0.1.2...HEAD[Unreleased]
+----------------------------------------------------------------
+
+
 https://github.com/eraserhd/rep/compare/v0.1.1...v0.1.2[v0.1.2]
 ----------------------------------------------------------------
 
@@ -13,7 +17,7 @@ https://github.com/eraserhd/rep/compare/v0.1.1...v0.1.2[v0.1.2]
 
 === Kakoune
 
-* `,eR` replaces selection with its evaluted result.
+* `,eR` replaces selection with its evaluated result.
 
 https://github.com/eraserhd/rep/compare/v0.1.0...v0.1.1[v0.1.1] - 2019-01-08
 --------------------------------------------------------------------------
