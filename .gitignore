@@ -14,3 +14,4 @@ pom.xml.asc
 !/deps/build.sh
 !/deps/path.sh
 !/deps/lein
+/result
