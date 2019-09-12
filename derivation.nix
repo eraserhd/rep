@@ -1,4 +1,4 @@
-{ stdenv, leiningen, graalvm8, ... }:
+{ stdenv, graalvm8, leiningen, maven, ... }:
 
 stdenv.mkDerivation {
   pname = "rep";
@@ -6,7 +6,7 @@ stdenv.mkDerivation {
 
   src = ./.;
 
-  buildInputs = [ leiningen graalvm8 ];
+  buildInputs = [ graalvm8 leiningen maven ];
 
   buildPhase = ''
     mkdir -p home
