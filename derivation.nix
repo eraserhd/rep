@@ -1,4 +1,4 @@
-{ stdenv, ... }:
+{ stdenv, leiningen, graalvm8, ... }:
 
 stdenv.mkDerivation {
   pname = "rep";
@@ -6,10 +6,18 @@ stdenv.mkDerivation {
 
   src = ./.;
 
+  buildInputs = [ leiningen graalvm8 ];
+
+  buildPhase = ''
+    mkdir -p home
+    export HOME=$(pwd)/home
+    lein native-image
+  '';
+
   meta = with stdenv.lib; {
     description = "TODO: fill me in";
     homepage = https://github.com/eraserhd/rep;
-    license = licenses.publicDomain;
+    license = licenses.unlicense;
     platforms = platforms.all;
     maintainers = [ maintainers.eraserhd ];
   };
