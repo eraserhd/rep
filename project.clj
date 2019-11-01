@@ -15,7 +15,8 @@
                         "--no-server"
                         "-J-Xmx3g"
                         "--report-unsupported-elements-at-runtime"
-                        "-H:ReflectionConfigurationFiles=reflectconfig.json"]}
+                        "-H:ReflectionConfigurationFiles=reflectconfig.json"
+                        "--initialize-at-build-time"]}
   :target-path "target/%s"
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
             [lein-midje "3.2.1"]]

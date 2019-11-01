@@ -16,7 +16,12 @@ cd /tmp
 git clone https://github.com/clojure/clojure.git
 cd clojure
 git checkout "$clojure_commit_hash"
-curl https://dev.clojure.org/jira/secure/attachment/18767/clj-1472-3.patch |patch -p1
+
+# dead link
+#curl https://dev.clojure.org/jira/secure/attachment/18767/clj-1472-3.patch |patch -p1
+curl 'https://api.media.atlassian.com/file/2af127ec-44e4-4bcd-9e0d-40fa2c737c00/binary?client=44579ec4-9d32-4a41-b3c1-ceed2de443de&collection=&dl=true&token=eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI0NDU3OWVjNC05ZDMyLTRhNDEtYjNjMS1jZWVkMmRlNDQzZGUiLCJhY2Nlc3MiOnsidXJuOmZpbGVzdG9yZTpmaWxlOjcyMjc5YjNiLTgwNDctNGE0YS04MjhhLWZkNWM2MjUwMGI0MCI6WyJyZWFkIl0sInVybjpmaWxlc3RvcmU6ZmlsZToyYWYxMjdlYy00NGU0LTRiY2QtOWUwZC00MGZhMmM3MzdjMDAiOlsicmVhZCJdLCJ1cm46ZmlsZXN0b3JlOmZpbGU6OTAwNzcyNzItYmEwNC00NTFiLTk3MTgtNTA1OTNlOGRmOGU1IjpbInJlYWQiXSwidXJuOmZpbGVzdG9yZTpmaWxlOjcxYjY4ZmRkLTg5NTMtNGQ2Ny04ZGQ1LWEzY2Y0Yjg3ZTY3YiI6WyJyZWFkIl0sInVybjpmaWxlc3RvcmU6ZmlsZTpiOGFiOWNiMy1iMDdlLTQ2MzctOWM4ZC1lODZmYWUwNjFmY2EiOlsicmVhZCJdLCJ1cm46ZmlsZXN0b3JlOmZpbGU6M2NiOWYxM2ItYTg1MC00YTI5LWI0ZjgtNTc4MWI4NDQ0ZTdkIjpbInJlYWQiXX0sImV4cCI6MTU3MjYxNTAzNiwibmJmIjoxNTcyNjE0MDc2fQ.fG1uECS3YhkSIYqGgcEZvIahpxGDcNCNN0JAdPaJINw' | patch -p1
+
+
 mvn -Dmaven.test.skip install
 
 # We need a patched spec.alpha, also
