@@ -8,9 +8,11 @@ This connects to a running nREPL server (like kind started with `lein repl`,
 for example), sends some code to be evaluated, and prints the results and
 output.
 
- $ rep '(clojure.tools.namespace.repl/refresh)'
- :reloading ()
- :ok
+....
+$ rep '(clojure.tools.namespace.repl/refresh)'
+:reloading ()
+:ok
+....
 
 Unlike other nREPL clients, `rep` does not try to maintain a persistent
 connection, meaning that thread-local variables and bindings like `*e` and
@@ -36,8 +38,10 @@ https://maven.apache.org/download.cgi[maven] install.
 
 You will need at least, and possibly _exactly_, leiningen 2.8.3, due to how
 it attempts to side-load nREPL.  It is available as `deps/lein`.
- 
-  $ deps/lein native-image
+
+....
+$ deps/lein native-image
+....
 
 You will find it in 'target/default+uberconf/rep'.
 
@@ -50,7 +54,9 @@ See https://github.com/eraserhd/rep/blob/develop/rep.1.adoc[the rep manpage].
 The `rc/` folder contains scripts which add a `,e` user mode to Kakoune.  To
 link this to Kakoiune's autoload directory, do the following:
 
-  $ make install
+....
+$ make install
+....
 
 `rep` must be in the path for the plugin to work.
 
