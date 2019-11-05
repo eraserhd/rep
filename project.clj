@@ -20,6 +20,7 @@
   :target-path "target/%s"
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
             [lein-midje "3.2.1"]]
-  :profiles {:dev {:dependencies [[midje "1.9.4"]]}
+  :profiles {:dev {:dependencies [[midje "1.9.4"]]}}
+             :repl {:dependencies [[nrepl/nrepl "0.5.3"]]}
              :uberjar {:aot :all
-                       :native-image {:opts ["-Dclojure.compiler.direct-linking=true"]}}})
+                       :native-image {:opts ["-Dclojure.compiler.direct-linking=true"]}})
