@@ -4,15 +4,12 @@
 pom.xml
 pom.xml.asc
 *.jar
+!/deps/*.jar
 *.class
 /.lein-*
 /.nrepl-port
 /.lsp
 .hgignore
 .hg/
-/deps/*
-!/deps/build.sh
-!/deps/path.sh
-!/deps/lein
 /result
 /.cpcache
