@@ -43,12 +43,14 @@
 (defn rep-native-driver
   "An integration driver which runs the `rep` binary."
   [server & args]
-  (let [starting-dir (System/getProperty "user.dir")
+  (let [rep-bin (or (System/getenv "REP_TO_TEST")
+                    "default/rep")
+        starting-dir (System/getProperty "user.dir")
         {:keys [port-file]
          :or {port-file ".nrepl-port"}}
         (first (filter map? args))]
     (spit (str starting-dir "/target/" port-file) (str (:port server)))
-    (apply sh "default/rep" (concat (rep-args args server) [:dir (io/file (str starting-dir "/target"))]))))
+    (apply sh rep-bin (concat (rep-args args server) [:dir (io/file (str starting-dir "/target"))]))))
 
 (def ^:dynamic *driver*
   (if (= "native" (System/getenv "REP_TEST_DRIVER"))
