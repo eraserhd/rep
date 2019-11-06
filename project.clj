@@ -18,8 +18,6 @@
                         "-H:ReflectionConfigurationFiles=reflectconfig.json"
                         "--initialize-at-build-time"]}
   :target-path "target/%s"
-  :plugins [[io.taylorwood/lein-native-image "0.3.0"]
-            [lein-midje "3.2.1"]]
-  :profiles {:dev {:dependencies [[midje "1.9.4"]]}
-             :uberjar {:aot :all
+  :plugins [[io.taylorwood/lein-native-image "0.3.0"]]
+  :profiles {:uberjar {:aot :all
                        :native-image {:opts ["-Dclojure.compiler.direct-linking=true"]}}})

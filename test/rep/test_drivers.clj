@@ -1,14 +1,17 @@
 (ns rep.test-drivers
   (:require
+    [clojure.test]
     [clojure.java.shell :refer [sh]]
     [clojure.java.io :as io]
-    [midje.sweet :refer :all]
     [nrepl.misc :refer [response-for]]
     [nrepl.server]
     [nrepl.transport :as t]
     [rep.core])
   (:import
     (java.io ByteArrayOutputStream OutputStreamWriter)))
+
+(defmacro => [expr checker]
+  `(clojure.test/is (~checker ~expr)))
 
 (defn- rep-args [args server]
   (->> args
@@ -85,7 +88,11 @@
         k (if (flags :to-stderr)
             :err
             :out)]
-    (contains {k s})))
+    (fn [value]
+      (if (string? s)
+        (= s (get value k))
+        (re-find s (get value k))))))
 
 (defn exits-with [code]
-  (contains {:exit code}))
+  (fn [value]
+    (= code (:exit value))))

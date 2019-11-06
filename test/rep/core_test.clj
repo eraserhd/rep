@@ -1,66 +1,66 @@
 (ns rep.core-test
   (:require
-    [midje.sweet :refer :all]
-    [rep.test-drivers :refer [rep prints exits-with]]))
+    [clojure.test :refer [deftest testing]]
+    [rep.test-drivers :refer [rep => prints exits-with]]))
 
-(facts "about basic evaluation of code"
-  (rep "(+ 2 2)")                                  => (prints "4\n")
-  (rep "(+ 1 1)")                                  => (exits-with 0)
-  (rep "(println 'hello)")                         => (prints "hello\nnil\n")
-  (rep "(.write ^java.io.Writer *err* \"error\")") => (prints "error" :to-stderr)
-  (rep "(throw (ex-info \"x\" {}))")               => (prints #"ExceptionInfo" :to-stderr)
-  (rep "(throw (ex-info \"x\" {}))")               => (exits-with 1))
+(deftest t-basic-evaluation-of-code
+  (=> (rep "(+ 2 2)")                                  (prints "4\n"))
+  (=> (rep "(+ 1 1)")                                  (exits-with 0))
+  (=> (rep "(println 'hello)")                         (prints "hello\nnil\n"))
+  (=> (rep "(.write ^java.io.Writer *err* \"error\")") (prints "error" :to-stderr))
+  (=> (rep "(throw (ex-info \"x\" {}))")               (prints #"ExceptionInfo" :to-stderr))
+  (=> (rep "(throw (ex-info \"x\" {}))")               (exits-with 1)))
 
-(facts "about help"
-  (rep "-h")     => (prints #"rep: Single-shot nREPL client")
-  (rep "--help") => (prints #"rep: Single-shot nREPL client"))
+(deftest t-help
+  (=> (rep "-h")     (prints #"rep: Single-shot nREPL client"))
+  (=> (rep "--help") (prints #"rep: Single-shot nREPL client")))
 
-(facts "about invalid switches"
-  (rep "-/") => (prints #"Unknown option" :to-stderr)
-  (rep "-/") => (exits-with 2))
+(deftest t-invalid-switches
+  (=> (rep "-/") (prints #"Unknown option" :to-stderr))
+  (=> (rep "-/") (exits-with 2)))
 
-(facts "about specifying the nREPL port"
+(deftest t-specifying-the-nREPL-port
   (let [absolute-path (str "@" (System/getProperty "user.dir") "/target/.nrepl-port")]
-    (rep "-p" "@.nrepl-port" "42")                    => (prints "42\n")
-    (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"}) => (prints "69\n")
-    (rep "-p" absolute-path  "11")                    => (prints "11\n")
-    (rep "-p" :<port> "77" {:port-file "bad"})        => (prints "77\n")
-    (rep "-p" :<host+port> "99" {:port-file "bad"}))  => (prints "99\n"))
+    (=> (rep "-p" "@.nrepl-port" "42")                    (prints "42\n"))
+    (=> (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"}) (prints "69\n"))
+    (=> (rep "-p" absolute-path  "11")                    (prints "11\n"))
+    (=> (rep "-p" :<port> "77" {:port-file "bad"})        (prints "77\n"))
+    (=> (rep "-p" :<host+port> "99" {:port-file "bad"})   (prints "99\n"))))
 
-(facts "about specifying the eval namespace"
-  (facts "about sending a bare namespace name"
-    (rep "-n" "user" "(str *ns*)")     => (prints "\"user\"\n")
-    (rep "-n" "rep.core" "(str *ns*)") => (prints "\"rep.core\"\n")))
+(deftest t-specifying-the-eval-namespace
+  (testing "sending a bare namespace name"
+    (=> (rep "-n" "user" "(str *ns*)")     (prints "\"user\"\n"))
+    (=> (rep "-n" "rep.core" "(str *ns*)") (prints "\"rep.core\"\n"))))
 
-(facts "about specifying line numbers"
-  (rep "(throw (Exception.))")                             => (prints #"REPL:1" :to-stderr)
-  (rep "-l" "27" "(throw (Exception.))")                   => (prints #"REPL:27" :to-stderr)
-  (rep "-l" "27:11"         "(do (def foo) (meta #'foo))") => (prints #":line 27")
-  (rep "-l" "27:11"         "(do (def foo) (meta #'foo))") => (prints #":column 15")
-  (rep "-l" "foo.clj:18"    "(do (def foo) (meta #'foo))") => (prints #":file \"foo.clj\"")
-  (rep "-l" "foo.clj:18"    "(do (def foo) (meta #'foo))") => (prints #":line 18")
-  (rep "-l" "foo.clj"       "(do (def foo) (meta #'foo))") => (prints #":file \"foo.clj\"")
-  (rep "-l" "foo.clj:18:11" "(do (def foo) (meta #'foo))") => (prints #":file \"foo.clj\"")
-  (rep "-l" "foo.clj:18:11" "(do (def foo) (meta #'foo))") => (prints #":line 18")
-  (rep "-l" "foo.clj:18:11" "(do (def foo) (meta #'foo))") => (prints #":column 15"))
+(deftest t-specifying-line-numbers
+  (=> (rep "(throw (Exception.))")                             (prints #"REPL:1" :to-stderr))
+  (=> (rep "-l" "27" "(throw (Exception.))")                   (prints #"REPL:27" :to-stderr))
+  (=> (rep "-l" "27:11"         "(do (def foo) (meta #'foo))") (prints #":line 27"))
+  (=> (rep "-l" "27:11"         "(do (def foo) (meta #'foo))") (prints #":column 15"))
+  (=> (rep "-l" "foo.clj:18"    "(do (def foo) (meta #'foo))") (prints #":file \"foo.clj\""))
+  (=> (rep "-l" "foo.clj:18"    "(do (def foo) (meta #'foo))") (prints #":line 18"))
+  (=> (rep "-l" "foo.clj"       "(do (def foo) (meta #'foo))") (prints #":file \"foo.clj\""))
+  (=> (rep "-l" "foo.clj:18:11" "(do (def foo) (meta #'foo))") (prints #":file \"foo.clj\""))
+  (=> (rep "-l" "foo.clj:18:11" "(do (def foo) (meta #'foo))") (prints #":line 18"))
+  (=> (rep "-l" "foo.clj:18:11" "(do (def foo) (meta #'foo))") (prints #":column 15")))
 
-(facts "about specifying the operation"
-  (rep "--op=eval" "(+ 1 2)") => (prints "3\n")
-  (rep "--op=rep-test-op") => (prints "\"hello\"\n"))
+(deftest t-specifying-the-operation
+  (=> (rep "--op=eval" "(+ 1 2)") (prints "3\n"))
+  (=> (rep "--op=rep-test-op")    (prints "\"hello\"\n")))
 
-(facts "about --print"
-  (fact "it can print arbitrary keys"
-    (rep "--print=foo-key" "(+ 1 1)") => (prints "2\n"))
-  (fact "it overrides any default formats the first time given"
-    (rep "--print=value,1,-%{value}-%n" "(+ 2 3)") => (prints "-5-\n"))
-  (fact "it can print to stderr"
-    (rep "--print=value,2,>%{value}<" "(+ 1 1)") => (prints ">2<" :to-stderr))
-  (fact "it can be given multiple times for one KEY"
-    (rep "--print=value,1,<%{value}>" "--print=value,1,<<%{value}>>" "2") => (prints #"<2><<2>>")))
+(deftest t---print
+  (testing "it can print arbitrary keys"
+    (=> (rep "--print=foo-key" "(+ 1 1)") (prints "2\n")))
+  (testing "it overrides any default formats the first time given"
+    (=> (rep "--print=value,1,-%{value}-%n" "(+ 2 3)") (prints "-5-\n")))
+  (testing "it can print to stderr"
+    (=> (rep "--print=value,2,>%{value}<" "(+ 1 1)") (prints ">2<" :to-stderr)))
+  (testing "it can be given multiple times for one KEY"
+    (=> (rep "--print=value,1,<%{value}>" "--print=value,1,<<%{value}>>" "2") (prints #"<2><<2>>"))))
 
-(facts "about sending additional fields"
-  (rep "--op=rep-test-op" "--send=foo,string,quux") => (prints "foo=\"quux\";\"hello\"\n")
-  (rep "--op=rep-test-op" "--send=bar,integer,42")  => (prints "bar=42;\"hello\"\n"))
+(deftest t-sending-additional-fields
+  (=> (rep "--op=rep-test-op" "--send=foo,string,quux") (prints "foo=\"quux\";\"hello\"\n"))
+  (=> (rep "--op=rep-test-op" "--send=bar,integer,42")  (prints "bar=42;\"hello\"\n")))
 
-(facts "about the examples in the documentation"
-  (rep "--op=ls-sessions" "--print=sessions") => (prints #"^\[\""))
+(deftest t-the-examples-in-the-documentation
+  (=> (rep "--op=ls-sessions" "--print=sessions") (prints #"^\[\"")))
