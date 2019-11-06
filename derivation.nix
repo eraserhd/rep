@@ -8,7 +8,6 @@ stdenv.mkDerivation {
 
   buildInputs = [
     graalvm8
-    #leiningen_2_8_3
     leiningen
     maven
   ];
