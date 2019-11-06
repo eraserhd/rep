@@ -48,7 +48,7 @@
          :or {port-file ".nrepl-port"}}
         (first (filter map? args))]
     (spit (str starting-dir "/target/" port-file) (str (:port server)))
-    (apply sh "default+uberjar/rep" (concat (rep-args args server) [:dir (io/file (str starting-dir "/target"))]))))
+    (apply sh "default/rep" (concat (rep-args args server) [:dir (io/file (str starting-dir "/target"))]))))
 
 (def ^:dynamic *driver*
   (if (= "native" (System/getenv "REP_TEST_DRIVER"))
