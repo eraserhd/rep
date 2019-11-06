@@ -1,6 +1,8 @@
-{ stdenv, fetchurl, graalvm8, leiningen, maven, jdk, ... }:
+{ stdenv, pkgs, fetchurl, graalvm8, leiningen, maven, jdk, ... }:
 
-stdenv.mkDerivation {
+let
+  java-deps = import ./deps.nix { inherit pkgs; };
+in stdenv.mkDerivation {
   pname = "rep";
   version = "0.1.2";
 
@@ -10,7 +12,7 @@ stdenv.mkDerivation {
     graalvm8
     leiningen
     maven
-  ];
+  ] ++ map (x: x.path) java-deps.packages;
 
   buildPhase = ''
     mkdir -p home
