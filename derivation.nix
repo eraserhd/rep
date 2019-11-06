@@ -1,4 +1,4 @@
-{ stdenv, pkgs, clojure, fetchurl, graalvm8, leiningen, maven, jdk, ... }:
+{ stdenv, pkgs, clojure, graalvm8, ... }:
 
 let
   java-deps = import ./deps.nix { inherit pkgs; };
@@ -11,8 +11,6 @@ in stdenv.mkDerivation {
   buildInputs = [
     clojure
     graalvm8
-    leiningen
-    maven
   ] ++ map (x: x.path) java-deps.packages;
 
   buildPhase = ''
