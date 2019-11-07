@@ -15,6 +15,7 @@ in {
       done
       CLASSPATH=test:src:$CLASSPATH
       export CLASSPATH
+      mkdir target
       REP_TEST_DRIVER=native \
         REP_TO_TEST='${rep}/bin/rep' \
         java clojure.main -e "
