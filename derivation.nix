@@ -1,4 +1,4 @@
-{ stdenv, pkgs, clojure, graalvm8, ... }:
+{ stdenv, pkgs, asciidoc-full, clojure, graalvm8, ... }:
 
 let
   java-deps = import ./deps.nix { inherit pkgs; };
@@ -9,6 +9,7 @@ in stdenv.mkDerivation {
   src = ./.;
 
   buildInputs = [
+    asciidoc-full
     clojure
     graalvm8
   ] ++ map (x: x.path) java-deps.packages;
@@ -31,10 +32,12 @@ in stdenv.mkDerivation {
       --initialize-at-build-time \
       rep.core \
       rep
+    a2x -f manpage rep.1.adoc
   '';
   installPhase = ''
-    mkdir -p $out/bin
+    mkdir -p $out/bin $out/share/man/man1
     cp rep $out/bin/rep
+    cp rep.1 $out/share/man/man1/
   '';
 
   meta = with stdenv.lib; {
