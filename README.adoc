@@ -1,4 +1,5 @@
-= rep
+rep
+===
 
 https://github.com/eraserhd/rep
 
@@ -19,37 +20,64 @@ connection, meaning that thread-local variables and bindings like `*e` and
 `*1` will not persist across invocations of `rep`.  Perhaps there are
 other limitations because of this?
 
-== Installation
+Installation
+------------
 
 Download the latest Linux or MacOS binaries from the GitHub releases tab
 above.
 
-== Building with Graal
-
-This is a somewhat graaling process right now, so bear with me.
-
-You'll first need to install https://www.graalvm.org/downloads/[GraalVM].
-
-Graal currently (rc11) has some issues with some of the bytecode that Clojure
-creates (see below), so we need to use a patched clojure and spec.alpha.  The
-`.circleci/images/primary/build.sh` script will build and install these into
-your local maven repository.  The script requires a
-https://maven.apache.org/download.cgi[maven] install.
-
-You will need at least, and possibly _exactly_, leiningen 2.8.3, due to how
-it attempts to side-load nREPL.  It is available as `deps/lein`.
-
-....
-$ deps/lein native-image
-....
-
-You will find it in 'target/default+uberconf/rep'.
-
-== Usage, Options, and Examples
+Usage, Options, and Examples
+----------------------------
 
 See https://github.com/eraserhd/rep/blob/develop/rep.1.adoc[the rep manpage].
 
-== Using with Kakoune
+Building
+--------
+
+https://nixos.org/nix/download.html[Nix] is the build tool. Weird, yes, but
+this project has a brittle set of peculiar dependencies and Nix allows us to
+pin down _everything_.
+
+....
+$ nix-build .
+....
+
+A `result` symlink will appear in the current directory point to the build
+output.
+
+Running Tests
+-------------
+
+If you want to add a feature, please add tests.  The nicest way to start
+a REPL running tests is:
+
+....
+$ clj -A:test
+Clojure 1.10.0-master-SNAPSHOT
+user=> (use 'midje.repl)
+Run `(doc midje)` for Midje usage.
+Run `(doc midje-repl)` for descriptions of Midje repl functions.
+nil
+user=> (autotest)
+
+======================================================================
+Loading (rep.test-drivers rep.format-test rep.core-test)
+nil
+All checks (36) succeeded.
+[Completed at 22:56:48]
+true
+user=>
+....
+
+To run all the tests that CI runs, the way CI runs them (do this before
+issuing a pull request):
+
+....
+$ nix-build release.nix
+....
+
+Using with Kakoune
+------------------
 
 The `rc/` folder contains scripts which add a `,e` user mode to Kakoune.  To
 link this to Kakoiune's autoload directory, do the following:
@@ -60,7 +88,8 @@ $ make install
 
 `rep` must be in the path for the plugin to work.
 
-== Graal/Bytecode Issues
+Graal/Bytecode Issues
+---------------------
 
 At the moment, Graal doesn't deal well with the way Clojure generates bytecode
 from its 'locking' macro, so to build bytecode that Graal can handle, we need
@@ -69,10 +98,10 @@ This issue is being tracked
 https://dev.clojure.org/jira/browse/CLJ-1472[here] and
 https://github.com/oracle/graal/issues/861[here].
 
-== License
+License
+-------
 
-Copyright © 2018 Jason M. Felice, except for included code written
-by other people.
+Copyright © 2018 Jason M. Felice
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
