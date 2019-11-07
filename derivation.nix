@@ -29,11 +29,12 @@ in stdenv.mkDerivation {
       --report-unsupported-elements-at-runtime \
       -H:ReflectionConfigurationFiles=reflectconfig.json \
       --initialize-at-build-time \
-      rep.core
+      rep.core \
+      rep
   '';
   installPhase = ''
     mkdir -p $out/bin
-    cp rep.core $out/bin/rep
+    cp rep $out/bin/rep
   '';
 
   meta = with stdenv.lib; {
