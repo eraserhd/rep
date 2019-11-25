@@ -98,6 +98,12 @@ This issue is being tracked
 https://dev.clojure.org/jira/browse/CLJ-1472[here] and
 https://github.com/oracle/graal/issues/861[here].
 
+Contributors
+------------
+
+- Jason M. Felice
+- Arne Brasseur
+
 License
 -------
 

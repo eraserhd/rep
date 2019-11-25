@@ -1,10 +1,9 @@
 (ns rep.core
-  (:require
-   [clojure.tools.cli :as cli]
-   [nrepl.core :as nrepl]
-   [rep.format :as format])
-  (:import
-   (java.io File))
+  (:require [clojure.tools.cli :as cli]
+            [clojure.edn :as edn]
+            [nrepl.core :as nrepl]
+            [rep.format :as format])
+  (:import (java.io File))
   (:gen-class))
 
 (defn- take-until
@@ -35,7 +34,7 @@
       ([result] (rf result))
       ([result input]
        (when (contains? input key)
-         (let [^java.io.Writer out (case fd
+         (let [^java.io.Writer out (case (long fd)
                                      1 *out*
                                      2 *err*)
                text ^String (format/format format input)]
@@ -175,31 +174,51 @@
   (let [^String dir (System/getProperty "user.dir")]
     (loop [option-value (:port (:options opts))]
       (if-some [[_ ^String filename :as x] (re-matches #"^@(.*)" option-value)]
-        (if (.isAbsolute (File. filename))
-          (recur (slurp filename))
-          (recur (slurp (str (File. dir filename)))))
+        (let [file (File. filename)
+              file (if (.isAbsolute file)
+                     file
+                     (File. dir filename))]
+          (if (.exists file)
+            (recur (slurp file))
+            (do
+              (binding [*out* *err*]
+                (println "Can't read nREPL port, no such file:" (str file)))
+              (System/exit 2))))
         (if-some [[_ host port] (re-matches #"(.*):(.*)" option-value)]
           [:host host :port (Long/parseLong port)]
           [:port (Long/parseLong option-value)])))))
+
+(defn edn-seq [^java.io.BufferedReader rdr]
+  (let [edn-val (edn/read {:eof ::EOF} rdr)]
+    (when (not (identical? ::EOF edn-val))
+      (cons edn-val (lazy-seq (edn-seq rdr))))))
+
+(defn eval-form [options session code]
+  (let [msg-seq (session (merge (:line options)
+                                (:send options)
+                                {:op (:op options)
+                                 :ns (:namespace options)
+                                 :code code}))]
+    (transduce (comp (until-status "done")
+                     (printing (:print options))
+                     report-exceptions)
+               null-reducer
+               {:exit-code 0}
+               msg-seq)))
 
 (defmethod command :eval
   [{:keys [options arguments] :as opts}]
   (let [conn (apply nrepl/connect (nrepl-connect-args opts))
         client (nrepl/client conn 60000)
         session (nrepl/client-session client)
-        msg-seq (session (merge (:line options)
-                                (:send options)
-                                {:op (:op options)
-                                 :ns (:namespace options)
-                                 :code (apply str arguments)}))
-        result (transduce
-                 (comp
-                   (until-status "done")
-                   (printing (:print options))
-                   report-exceptions)
-                 null-reducer
-                 {:exit-code 0}
-                 msg-seq)
+        code-seq (if (empty? arguments)
+                   (map #(binding [*print-dup* true] (pr-str %)) (edn-seq *in*))
+                   [(apply str arguments)])
+        result (loop [[code & code-seq] code-seq]
+                 (let [result (eval-form options session code)]
+                   (if (and (= 0 (:exit-code result)) (seq code-seq))
+                     (recur code-seq)
+                     result)))
         ^java.io.Closeable cc conn]
     (.close cc)
     (:exit-code result)))

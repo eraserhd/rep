@@ -1,0 +1,58 @@
+From c9db05268075ff63e9a12cb41c92399faa45ac8f Mon Sep 17 00:00:00 2001
+From: Adam Clements <adam.clements@gmail.com>
+Date: Wed, 12 Dec 2018 12:24:46 -0600
+Subject: [PATCH] CLJ-1472 Use Java synchronized block for locking macro
+
+---
+ src/clj/clojure/core.clj       | 6 +-----
+ src/jvm/clojure/lang/Util.java | 9 +++++++++
+ 2 files changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/src/clj/clojure/core.clj b/src/clj/clojure/core.clj
+index 8e98e072..01c7a002 100644
+--- a/src/clj/clojure/core.clj
++++ b/src/clj/clojure/core.clj
+@@ -1648,15 +1648,11 @@ (defmacro locking
+   "Executes exprs in an implicit do, while holding the monitor of x.
+   Will release the monitor of x in all circumstances."
+   {:added "1.0"}
+   [x & body]
+   `(let [lockee# ~x]
+-     (try
+-      (monitor-enter lockee#)
+-      ~@body
+-      (finally
+-       (monitor-exit lockee#)))))
++     (clojure.lang.Util/lock lockee# (^{:once true} fn* [] ~@body))))
+ 
+ (defmacro ..
+   "form => fieldName-symbol or (instanceMethodName-symbol args*)
+ 
+   Expands into a member access (.) of the first member on the first
+diff --git a/src/jvm/clojure/lang/Util.java b/src/jvm/clojure/lang/Util.java
+index e3be3e8c..89d3a1e9 100644
+--- a/src/jvm/clojure/lang/Util.java
++++ b/src/jvm/clojure/lang/Util.java
+@@ -242,10 +242,19 @@ static public RuntimeException sneakyThrow(Throwable t) {
+ @SuppressWarnings("unchecked")
+ static private <T extends Throwable> void sneakyThrow0(Throwable t) throws T {
+ 	throw (T) t;
+ }
+ 
++/**
++ * Invoke f under lockee monitor
++ */
++static public Object lock(final Object lockee, final IFn f) {
++	synchronized(lockee) {
++		return f.invoke();
++	}
++}
++
+ static public Object loadWithClass(String scriptbase, Class<?> loadFrom) throws IOException, ClassNotFoundException{
+     Var.pushThreadBindings(RT.map(new Object[] { Compiler.LOADER, loadFrom.getClassLoader() }));
+     try {
+         return RT.var("clojure.core", "load").invoke(scriptbase);
+     }
+-- 
+2.17.2 (Apple Git-113)
+
