@@ -17,6 +17,8 @@ Unlike other nREPL clients, `rep` does not try to maintain a persistent
 connection, meaning that thread-local variables and bindings like `*e` and
 `*1` will not persist across invocations of `rep`.
 
+If `EXPR` is omitted then code is read from STDIN.
+
 == OPTIONS
 *--*::
     End of options.  Useful to send code which starts with a dash.

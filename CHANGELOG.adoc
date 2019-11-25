@@ -4,6 +4,9 @@ Change Log
 https://github.com/eraserhd/rep/compare/v0.1.2...HEAD[Unreleased]
 ----------------------------------------------------------------
 
+=== Added
+
+* Allow streaming code from STDIN
 
 https://github.com/eraserhd/rep/compare/v0.1.1...v0.1.2[v0.1.2]
 ----------------------------------------------------------------
