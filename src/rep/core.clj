@@ -211,8 +211,7 @@
   (let [conn (apply nrepl/connect (nrepl-connect-args opts))
         client (nrepl/client conn 60000)
         session (nrepl/client-session client)
-        code-seq (if (or (empty? arguments)
-                         (= ["-"] arguments))
+        code-seq (if (empty? arguments)
                    (map #(binding [*print-dup* true] (pr-str %)) (edn-seq *in*))
                    [(apply str arguments)])
         result (loop [[code & code-seq] code-seq]
