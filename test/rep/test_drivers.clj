@@ -2,6 +2,7 @@
   (:require
     [clojure.java.shell :refer [sh]]
     [clojure.java.io :as io]
+    [clojure.string]
     [midje.sweet :refer :all]
     [nrepl.misc :refer [response-for]]
     [nrepl.server]
@@ -10,14 +11,15 @@
   (:import
     (java.io ByteArrayOutputStream OutputStreamWriter)))
 
-(defn- rep-args [args server]
+(defn- rep-args [args server user-dir]
   (->> args
     (remove map?)
     (map (fn [arg]
            (case arg
              :<host+port> (str "localhost:" (:port server))
              :<port>      (str (:port server))
-             arg)))))
+             arg)))
+    (map #(clojure.string/replace % "${user.dir}" user-dir))))
 
 (defn rep-fast-driver
   "A driver which does not expect the native image to be built."
@@ -33,7 +35,7 @@
             err (ByteArrayOutputStream.)
             exit-code (binding [*out* (OutputStreamWriter. out)
                                 *err* (OutputStreamWriter. err)]
-                        (apply rep.core/rep (rep-args args server)))]
+                        (apply rep.core/rep (rep-args args server starting-dir)))]
         {:out (.toString out)
          :err (.toString err)
          :exit exit-code})

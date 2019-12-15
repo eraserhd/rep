@@ -227,8 +227,13 @@
 
 (defn rep
   [& args]
-  (let [opts (cli/parse-opts args cli-options)]
-    (command opts)))
+  (try
+    (let [opts (cli/parse-opts args cli-options)]
+      (command opts))
+    (catch Exception e
+      (.write ^java.io.Writer *err* (str "rep: " (.getMessage e) \newline))
+      (.flush ^java.io.Writer *err*)
+      255)))
 
 (defn -main
   [& args]

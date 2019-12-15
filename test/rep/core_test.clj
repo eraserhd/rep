@@ -20,13 +20,13 @@
   (rep "-/") => (exits-with 2))
 
 (facts "about specifying the nREPL port"
-  (let [absolute-path (str "@" (System/getProperty "user.dir") "/target/.nrepl-port")]
-    (rep "-p" "@.nrepl-port" "42")                    => (prints "42\n")
-    (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"}) => (prints "69\n")
-    (rep "-p" absolute-path  "11")                    => (prints "11\n")
-    (rep "-p" :<port> "77" {:port-file "bad"})        => (prints "77\n")
-    (rep "-p" :<host+port> "99" {:port-file "bad"}))  => (prints "99\n")
-    (rep "-p" "@foo.txt@target/src/foo/bar.clj" "111" {:port-file "foo.txt"}) => (prints "111\n"))
+  (rep "-p" "@.nrepl-port" "42")                         => (prints "42\n")
+  (rep "-p" "@.does-not-exist" "42")                     => (prints #"rep: .*/\.does-not-exist \(No such file or directory\)" :to-stderr)
+  (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"})      => (prints "69\n")
+  (rep "-p" :<port> "77" {:port-file "bad"})             => (prints "77\n")
+  (rep "-p" :<host+port> "99" {:port-file "bad"})        => (prints "99\n")
+  (rep "-p" "@.nrepl-port@target/src/foo/bar.clj" "111") => (prints "111\n")
+  (rep "-p" "@${user.dir}/target/.nrepl-port" "11")      => (prints "11\n"))
 
 (facts "about specifying the eval namespace"
   (facts "about sending a bare namespace name"

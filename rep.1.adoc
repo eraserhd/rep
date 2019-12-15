@@ -96,3 +96,6 @@ connection, meaning that thread-local variables and bindings like `*e` and
 
 *2*::
     An error occurred while parsing options.
+
+*255*::
+    Some other kind of exception occurred during processing.
