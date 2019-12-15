@@ -26,7 +26,8 @@
   (rep "-p" "${port}" "77" {:port-file "bad"})           => (prints "77\n")
   (rep "-p" "localhost:${port}" "99" {:port-file "bad"}) => (prints "99\n")
   (rep "-p" "@.nrepl-port@target/src/foo/bar.clj" "111") => (prints "111\n")
-  (rep "-p" "@${user.dir}/target/.nrepl-port" "11")      => (prints "11\n"))
+  (rep "-p" "@${user.dir}/target/.nrepl-port" "11")      => (prints "11\n")
+  (rep "-p" "@.nrepl-port@/not-exist/foo/bar/baz" "91")  => (prints "rep: No ancestor of /not-exist/foo/bar/baz contains .nrepl-port\n" :to-stderr))
 
 (facts "about specifying the eval namespace"
   (facts "about sending a bare namespace name"

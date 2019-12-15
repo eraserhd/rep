@@ -184,16 +184,21 @@
     (when (some? file)
       (cons file (ancestor-files (.getParentFile file))))))
 
+(defn- ancestor-with-file
+  [^String port-filename ^String relative-to]
+  (if-some [result (->> (ancestor-files (make-absolute-file relative-to))
+                        (map #(File. ^File % port-filename))
+                        (filter #(.exists ^File %))
+                        first)]
+    result
+    (throw (Exception. (str "No ancestor of " relative-to " contains " port-filename)))))
+
 (defn- nrepl-connect-args
   [opts]
   (reduce (fn [option-value _]
             (condp re-matches option-value
-              #"^@(.*)@(.*)" :>> (fn [[_ ^String port-filename ^String relative-to]]
-                                   (->> (ancestor-files (make-absolute-file relative-to))
-                                        (map #(File. ^File % port-filename))
-                                        (filter #(.exists ^File %))
-                                        first
-                                        slurp))
+              #"^@(.*)@(.*)" :>> (fn [[_ port-filename relative-to]]
+                                   (slurp (ancestor-with-file port-filename relative-to)))
               #"^@(.*)"      :>> (fn [[_ filename]]
                                    (slurp (make-absolute-file filename)))
               #"(.*):(.*)"   :>> (fn [[_ host port]]
