@@ -1,3 +1,5 @@
+declare-option -docstring %{--port value for rep} str rep_port '@.nrepl-port@.'
+
 declare-option -hidden str rep_evaluate_output
 declare-option -hidden str rep_namespace
 
@@ -58,7 +60,7 @@ Switches:
                     fi
                 }
                 error_file=$(mktemp)
-                rep_command='value=$(rep'
+                rep_command='value=$(rep --port='"$kak_opt_rep_port"
                 add_file_line_and_column
                 add_namespace "$@"
                 rep_command="$rep_command"' -- "$kak_selection" 2>"$error_file" |sed -e "s/'"'"'/'"''"'/g")'
