@@ -179,12 +179,14 @@
 
 (defn- nrepl-connect-args
   [opts]
-  (loop [option-value (:port (:options opts))]
-    (if-some [[_ ^String filename] (re-matches #"^@(.*)" option-value)]
-      (recur (slurp (make-absolute filename)))
-      (if-some [[_ host port] (re-matches #"(.*):(.*)" option-value)]
-        [:host host :port (Long/parseLong port)]
-        [:port (Long/parseLong option-value)]))))
+  (reduce (fn [option-value _]
+            (if-some [[_ ^String filename] (re-matches #"^@(.*)" option-value)]
+              (slurp (make-absolute filename))
+              (if-some [[_ host port] (re-matches #"(.*):(.*)" option-value)]
+                (reduced [:host host :port (Long/parseLong port)])
+                (reduced [:port (Long/parseLong option-value)]))))
+          (:port (:options opts))
+          (range)))
 
 (defmethod command :eval
   [{:keys [options arguments] :as opts}]
