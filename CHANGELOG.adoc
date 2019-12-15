@@ -4,6 +4,11 @@ Change Log
 https://github.com/eraserhd/rep/compare/v0.1.2...HEAD[Unreleased]
 ----------------------------------------------------------------
 
+=== Added
+
+* `--port` accept `@FNAME@RELATIVE` to find a port file in a parent.
+* Finding `.nrepl-port` in the current directory or a parent is now the
+  default behavior.
 
 https://github.com/eraserhd/rep/compare/v0.1.1...v0.1.2[v0.1.2]
 ----------------------------------------------------------------

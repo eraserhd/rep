@@ -131,7 +131,7 @@
    [nil "--op OP"                   "Send OP as the nREPL operation."
     :default "eval"]
    ["-p" "--port [HOST:]PORT|@FILE" "Connect to HOST at PORT, which may be read from FILE."
-    :default "@.nrepl-port"]
+    :default "@.nrepl-port@."]
    [nil "--print KEY[,FD[,FORMAT]]" "Print KEY from response messages to FD using FORMAT."
     :default [{:key :out, :fd 1, :format "%{out}", :default? true}
               {:key :err, :fd 2, :format "%{err}", :default? true}
@@ -170,23 +170,36 @@
   (println)
   0)
 
-(defn- make-absolute
+(defn- make-absolute-file
   [^String filename]
-  (if (.isAbsolute (File. filename))
-    filename
-    (let [^String dir (System/getProperty "user.dir")]
-      (str (File. dir filename)))))
+  (let [file (File. filename)]
+    (if (.isAbsolute file)
+      file
+      (let [^String dir (System/getProperty "user.dir")]
+        (File. dir filename)))))
+
+(defn- ancestor-files
+  [^File file]
+  (lazy-seq
+    (when (some? file)
+      (cons file (ancestor-files (.getParentFile file))))))
 
 (defn- nrepl-connect-args
   [opts]
   (reduce (fn [option-value _]
             (condp re-matches option-value
-              #"^@(.*)"    :>> (fn [[_ filename]]
-                                 (slurp (make-absolute filename)))
-              #"(.*):(.*)" :>> (fn [[_ host port]]
-                                 (reduced [:host host :port (Long/parseLong port)]))
-              #"(.*)"      :>> (fn [[_ port]]
-                                 (reduced [:port (Long/parseLong port)]))))
+              #"^@(.*)@(.*)" :>> (fn [[_ ^String port-filename ^String relative-to]]
+                                   (->> (ancestor-files (make-absolute-file relative-to))
+                                        (map #(File. ^File % port-filename))
+                                        (filter #(.exists ^File %))
+                                        first
+                                        slurp))
+              #"^@(.*)"      :>> (fn [[_ filename]]
+                                   (slurp (make-absolute-file filename)))
+              #"(.*):(.*)"   :>> (fn [[_ host port]]
+                                   (reduced [:host host :port (Long/parseLong port)]))
+              #"(.*)"        :>> (fn [[_ port]]
+                                   (reduced [:port (Long/parseLong port)]))))
           (:port (:options opts))
           (range)))
 

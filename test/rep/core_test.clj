@@ -25,7 +25,8 @@
     (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"}) => (prints "69\n")
     (rep "-p" absolute-path  "11")                    => (prints "11\n")
     (rep "-p" :<port> "77" {:port-file "bad"})        => (prints "77\n")
-    (rep "-p" :<host+port> "99" {:port-file "bad"}))  => (prints "99\n"))
+    (rep "-p" :<host+port> "99" {:port-file "bad"}))  => (prints "99\n")
+    (rep "-p" "@foo.txt@target/src/foo/bar.clj" "111" {:port-file "foo.txt"}) => (prints "111\n"))
 
 (facts "about specifying the eval namespace"
   (facts "about sending a bare namespace name"

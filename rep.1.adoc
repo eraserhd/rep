@@ -43,11 +43,11 @@ connection, meaning that thread-local variables and bindings like `*e` and
 *--op*=OP::
     Specify an nREPL operation.  The default is "eval".
 
-*-p, --port*='@FILE|[HOST:]PORT'::
-    Specify the nREPL 'PORT' and possibly 'HOST'.  If 'FILE' is given, the
-    host and port are read from a file.  If 'HOST' is not given, 'localhost'
-    is assumed.  The default is '@.nrepl-port', which will find the running
-    nREPL if it was invoked by Leiningen.
+*-p, --port*='@FILE|@FNAME@RELATIVE|[HOST:]PORT'::
+    If 'FILE' is given, FILE is read for host and port.  If 'FNAME' and
+    'RELATIVE' are given, `rep` finds a parent directory of 'RELATIVE' which
+    contains 'FNAME' and reads that file. The default is '@.nrepl-port@.',
+    which will find the running nREPL if it was invoked by Leiningen.
 
 *--print*=KEY[,FD[,FORMAT]]::
     Print response messages with KEY in them to FD, using FORMAT.  In FORMAT,
