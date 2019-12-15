@@ -2,7 +2,7 @@
   (:require
     [clojure.java.shell :refer [sh]]
     [clojure.java.io :as io]
-    [clojure.string]
+    [clojure.string :as str]
     [midje.sweet :refer :all]
     [nrepl.misc :refer [response-for]]
     [nrepl.server]
@@ -15,11 +15,9 @@
   (->> args
     (remove map?)
     (map (fn [arg]
-           (case arg
-             :<host+port> (str "localhost:" (:port server))
-             :<port>      (str (:port server))
-             arg)))
-    (map #(clojure.string/replace % "${user.dir}" user-dir))))
+           (-> arg
+             (str/replace "${port}" (str (:port server)))
+             (str/replace "${user.dir}" user-dir))))))
 
 (defn rep-fast-driver
   "A driver which does not expect the native image to be built."
