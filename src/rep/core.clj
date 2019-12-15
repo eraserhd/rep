@@ -170,17 +170,21 @@
   (println)
   0)
 
+(defn- make-absolute
+  [^String filename]
+  (if (.isAbsolute (File. filename))
+    filename
+    (let [^String dir (System/getProperty "user.dir")]
+      (str (File. dir filename)))))
+
 (defn- nrepl-connect-args
   [opts]
-  (let [^String dir (System/getProperty "user.dir")]
-    (loop [option-value (:port (:options opts))]
-      (if-some [[_ ^String filename] (re-matches #"^@(.*)" option-value)]
-        (if (.isAbsolute (File. filename))
-          (recur (slurp filename))
-          (recur (slurp (str (File. dir filename)))))
-        (if-some [[_ host port] (re-matches #"(.*):(.*)" option-value)]
-          [:host host :port (Long/parseLong port)]
-          [:port (Long/parseLong option-value)])))))
+  (loop [option-value (:port (:options opts))]
+    (if-some [[_ ^String filename] (re-matches #"^@(.*)" option-value)]
+      (recur (slurp (make-absolute filename)))
+      (if-some [[_ host port] (re-matches #"(.*):(.*)" option-value)]
+        [:host host :port (Long/parseLong port)]
+        [:port (Long/parseLong option-value)]))))
 
 (defmethod command :eval
   [{:keys [options arguments] :as opts}]
