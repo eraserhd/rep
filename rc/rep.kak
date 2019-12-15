@@ -1,5 +1,3 @@
-declare-option -docstring %{--port value for rep} str rep_port '@.nrepl-port@.'
-
 declare-option -hidden str rep_evaluate_output
 declare-option -hidden str rep_namespace
 
@@ -31,6 +29,11 @@ Switches:
         try %{ rep-find-namespace }
         evaluate-commands -itersel -draft %{
             evaluate-commands %sh{
+                add_port() {
+                    if [ -n "$kak_buffile" ]; then
+                        rep_command="$rep_command --port=\"@.nrepl-port@$kak_buffile\""
+                    fi
+                }
                 add_file_line_and_column() {
                     anchor="${kak_selection_desc%,*}"
                     anchor_line="${anchor%.*}"
@@ -60,7 +63,8 @@ Switches:
                     fi
                 }
                 error_file=$(mktemp)
-                rep_command='value=$(rep --port='"$kak_opt_rep_port"
+                rep_command='value=$(rep'
+                add_port
                 add_file_line_and_column
                 add_namespace "$@"
                 rep_command="$rep_command"' -- "$kak_selection" 2>"$error_file" |sed -e "s/'"'"'/'"''"'/g")'
