@@ -64,7 +64,7 @@
   "A reducing function which does nothing."
   ([] nil)
   ([result] result)
-  ([result input] result))
+  ([result _input] result))
 
 (defn- parse-line-argument [arg]
   (condp re-matches arg
@@ -174,7 +174,7 @@
   [opts]
   (let [^String dir (System/getProperty "user.dir")]
     (loop [option-value (:port (:options opts))]
-      (if-some [[_ ^String filename :as x] (re-matches #"^@(.*)" option-value)]
+      (if-some [[_ ^String filename] (re-matches #"^@(.*)" option-value)]
         (if (.isAbsolute (File. filename))
           (recur (slurp filename))
           (recur (slurp (str (File. dir filename)))))
