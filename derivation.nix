@@ -42,9 +42,9 @@ in stdenv.mkDerivation {
   '';
 
   meta = with stdenv.lib; {
-    description = "TODO: fill me in";
+    description = "Single-shot nREPL client";
     homepage = https://github.com/eraserhd/rep;
-    license = licenses.unlicense;
+    license = licenses.epl10;
     platforms = platforms.all;
     maintainers = [ maintainers.eraserhd ];
   };
