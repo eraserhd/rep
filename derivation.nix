@@ -38,7 +38,8 @@ in stdenv.mkDerivation {
     mkdir -p $out/bin/ $out/share/man/man1/ $out/share/kak/autoload/plugins/
     cp rep $out/bin/
     cp rep.1 $out/share/man/man1/
-    cp rc/rep.kak $out/share/kak/autoload/plugins/
+    substitute rc/rep.kak $out/share/kak/autoload/plugins/rep.kak \
+      --replace '$(rep' '$('"$out/bin/rep"
   '';
 
   meta = with stdenv.lib; {
