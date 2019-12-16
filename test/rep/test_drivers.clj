@@ -50,7 +50,7 @@
          :or {port-file ".nrepl-port"}}
         (first (filter map? args))]
     (spit (str starting-dir "/target/" port-file) (str (:port server)))
-    (apply sh rep-bin (concat (rep-args args server) [:dir (io/file (str starting-dir "/target"))]))))
+    (apply sh rep-bin (concat (rep-args args server starting-dir) [:dir (io/file (str starting-dir "/target"))]))))
 
 (def ^:dynamic *driver*
   (if (= "native" (System/getenv "REP_TEST_DRIVER"))
