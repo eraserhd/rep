@@ -1,31 +1,12 @@
 (ns rep.core
   (:require
-   [clojure.string :as str]
    [clojure.tools.cli :as cli]
    [nrepl.core :as nrepl]
+   [rep.errors :as errors]
    [rep.format :as format])
   (:import
    (java.io File))
   (:gen-class))
-
-(defprotocol HasErrorMessage
-  (error-message [e]))
-
-(extend-protocol HasErrorMessage
-  Object
-  (error-message [o]
-    (str o))
-
-  Exception
-  (error-message [e]
-    (.getMessage e))
-
-  java.io.FileNotFoundException
-  (error-message [e]
-    ;; Graal's message is just the filename, OpenJDK is filename, space, and
-    ;; a parenthesized error message.
-    (let [filename (str/replace (.getMessage e) #" \(.*$" "")]
-      (str filename ": not found."))))
 
 (defn- take-until
   "Transducer like take-while, except keeps the last value tested."
@@ -256,7 +237,7 @@
     (let [opts (cli/parse-opts args cli-options)]
       (command opts))
     (catch Exception e
-      (.write ^java.io.Writer *err* (str "rep: " (error-message e) \newline))
+      (.write ^java.io.Writer *err* (str "rep: " (errors/error-message e) \newline))
       (.flush ^java.io.Writer *err*)
       255)))
 
