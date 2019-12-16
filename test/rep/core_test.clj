@@ -21,7 +21,7 @@
 
 (facts "about specifying the nREPL port"
   (rep "-p" "@.nrepl-port" "42")                         => (prints "42\n")
-  (rep "-p" "@.does-not-exist" "42")                     => (prints #"rep: .*/\.does-not-exist \(No such file or directory\)" :to-stderr)
+  (rep "-p" "@.does-not-exist" "42")                     => (prints #"rep: .*/\.does-not-exist: not found.\n" :to-stderr)
   (rep "-p" "@foo.txt" "69" {:port-file "foo.txt"})      => (prints "69\n")
   (rep "-p" "${port}" "77" {:port-file "bad"})           => (prints "77\n")
   (rep "-p" "localhost:${port}" "99" {:port-file "bad"}) => (prints "99\n")
