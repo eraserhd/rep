@@ -1,4 +1,4 @@
-{ stdenv, pkgs, asciidoc-full, clojure, graalvm8, ... }:
+{ stdenv, pkgs, asciidoc-full, graalvm8, ... }:
 
 let
   java-deps = import ./deps.nix { inherit pkgs; };
@@ -10,7 +10,6 @@ in stdenv.mkDerivation {
 
   buildInputs = [
     asciidoc-full
-    clojure
     graalvm8
   ] ++ map (x: x.path) java-deps.packages;
 
