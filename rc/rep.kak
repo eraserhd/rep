@@ -8,7 +8,7 @@ define-command -hidden rep-find-namespace %{
         # containing parens.
         execute-keys 'gkm'
         evaluate-commands %sh{
-            ns=$(rep -- "(second '$kak_selection)" 2>/dev/null)
+            ns=$(rep --port="@.nrepl-port@${kak_buffile-.}" -- "(second '$kak_selection)" 2>/dev/null)
             if [ $? -ne 0 ]; then
                 printf 'fail "could not parse namespace"\n'
             else
