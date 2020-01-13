@@ -211,22 +211,22 @@
 
 (defmethod command :eval
   [{:keys [options arguments] :as opts}]
-  (let [conn (apply nrepl/connect (nrepl-connect-args opts))
-        client (nrepl/client conn 60000)
+  (let [conn    (apply nrepl/connect (nrepl-connect-args opts))
+        client  (nrepl/client conn 60000)
         session (nrepl/client-session client)
         msg-seq (session (merge (:line options)
                                 (:send options)
                                 {:op (:op options)
                                  :ns (:namespace options)
                                  :code (apply str arguments)}))
-        result (transduce
-                 (comp
-                   (until-status "done")
-                   (printing (:print options))
-                   report-exceptions)
-                 null-reducer
-                 {:exit-code 0}
-                 msg-seq)
+        result  (transduce
+                  (comp
+                    (until-status "done")
+                    (printing (:print options))
+                    report-exceptions)
+                  null-reducer
+                  {:exit-code 0}
+                  msg-seq)
         ^java.io.Closeable cc conn]
     (.close cc)
     (:exit-code result)))
