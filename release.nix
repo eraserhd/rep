@@ -1,7 +1,12 @@
 { nixpkgs ? (import ./nixpkgs.nix), ... }:
 let
-  pkgs = import nixpkgs { config = {}; };
-  rep = pkgs.callPackage ./derivation.nix {};
+  pkgs = import nixpkgs {
+    config = {};
+    overlays = [
+      (import ./overlay.nix)
+    ];
+  };
+  rep = pkgs.rep;
 in {
   unit-test = let
     java-deps = import ./test-deps.nix { inherit pkgs; };
