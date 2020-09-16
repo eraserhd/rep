@@ -8,8 +8,8 @@ let
   clj2nix = pkgs.callPackage (pkgs.fetchFromGitHub {
       owner = "hlolli";
       repo = "clj2nix";
-      rev = "de55ca72391bdadcdcbdf40337425d94e55162cb";
-      sha256 = "0bsq0b0plh6957zy9gl2g6hq8nhjkln4sn9lgf3yqbwz8i1z5a4a";
+      rev = "bc74da7531814cf894be5b618d40de8298547da9";
+      sha256 = "0z5f5vs2ibhni7ydic3l5f8wy53wbwxf7pax963pcj714m3mlp47";
     }) {};
 in pkgs.rep.overrideAttrs (old: {
   buildInputs = old.buildInputs ++ [ clj2nix ];

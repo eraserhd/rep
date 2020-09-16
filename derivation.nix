@@ -1,28 +1,7 @@
-{ stdenv, pkgs, asciidoc-full, graalvm8, ... }:
+{ stdenv, pkgs, asciidoc-full, ... }:
 
 let
-  patched_clojure = stdenv.mkDerivation {
-    name = "patched-clojure-1.10.0";
-    src = ./deps;
-    installPhase = ''
-      mkdir -p $out/share/java
-      cp clojure-1.10*.jar $out/share/java/
-    '';
-  };
-
-  patched_spec_alpha = stdenv.mkDerivation {
-    name = "patched-spec.alpha-0.2.177";
-    src = ./deps;
-    installPhase = ''
-      mkdir -p $out/share/java
-      cp spec.alpha*.jar $out/share/java/
-    '';
-  };
-
-  build-deps = map (x: x.path) (import ./deps.nix { inherit pkgs; }).packages ++ [
-    patched_clojure
-    patched_spec_alpha
-  ];
+  build-deps = map (x: x.path) (import ./deps.nix { inherit pkgs; }).packages;
 in stdenv.mkDerivation {
   pname = "rep";
   version = "0.1.2";
@@ -31,7 +10,6 @@ in stdenv.mkDerivation {
 
   buildInputs = [
     asciidoc-full
-    graalvm8
   ] ++ build-deps;
 
   buildPhase = ''

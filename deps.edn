@@ -1,7 +1,5 @@
 {:deps
- {org.clojure/clojure {:local/root "deps/clojure-1.10.0-master-SNAPSHOT.jar"}
-  org.clojure/spec.alpha {:local/root "deps/spec.alpha-0.2.177-SNAPSHOT.jar"}
-  org.clojure/tools.cli {:mvn/version "0.4.1"}
+ {org.clojure/tools.cli {:mvn/version "0.4.1"}
   nrepl/nrepl {:mvn/version "0.5.3"}}
  :aliases
  {:test
