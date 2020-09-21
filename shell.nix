@@ -1,7 +1,7 @@
 let
   nixpkgs = import ./nixpkgs.nix;
   pkgs = import nixpkgs {
-    config = {};
+    config = { allowBroken = true; };
     overlays = [ (import ./overlay.nix) ];
   };
 
