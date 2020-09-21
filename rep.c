@@ -86,6 +86,19 @@ int main(int argc, char *argv[])
 
     if (!has_port)
         resolve_port_option("@.nrepl-port");
-    printf("hostname = %s, port = %u\n", inet_ntoa(opt_port.sin_addr), ntohs(opt_port.sin_port));
+
+    size_t code_size = 0;
+    for (int i = optind; i < argc; ++i)
+        code_size += strlen(argv[i]) + 1;
+    char *code = (char *)alloca(code_size);
+    code[0] = '\0';
+    for (int i = optind; i < argc; ++i)
+    {
+        if (code[0])
+            strcat(code, " ");
+        strcat(code, argv[i]);
+    }
+
+    printf("code::%s::\n", code);
     exit(0);
 }
