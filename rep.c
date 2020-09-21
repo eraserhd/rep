@@ -79,6 +79,22 @@ const struct option LONG_OPTIONS[] =
     { NULL,   0, NULL, 0 }
 };
 
+char* collect_code(int argc, char *argv[], int start)
+{
+    size_t code_size = 0;
+    for (int i = optind; i < argc; ++i)
+        code_size += strlen(argv[i]) + 1;
+    char *code = (char *)malloc(code_size);
+    code[0] = '\0';
+    for (int i = optind; i < argc; ++i)
+    {
+        if (code[0])
+            strcat(code, " ");
+        strcat(code, argv[i]);
+    }
+    return code;
+}
+
 int main(int argc, char *argv[])
 {
     int opt;
@@ -97,18 +113,10 @@ int main(int argc, char *argv[])
     if (!has_port)
         resolve_port_option("@.nrepl-port");
 
-    size_t code_size = 0;
-    for (int i = optind; i < argc; ++i)
-        code_size += strlen(argv[i]) + 1;
-    char *code = (char *)alloca(code_size);
-    code[0] = '\0';
-    for (int i = optind; i < argc; ++i)
-    {
-        if (code[0])
-            strcat(code, " ");
-        strcat(code, argv[i]);
-    }
+    char* code = collect_code(argc, argv, optind);
 
     printf("code::%s::\n", code);
+
+    free(code);
     exit(0);
 }
