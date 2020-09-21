@@ -2,7 +2,7 @@
 all: rep test rep.1
 
 rep: rep.c
-	$(CC) -O2 -o rep rep.c
+	$(CC) -g -O2 -o rep rep.c
 
 rep.1: rep.1.adoc
 	a2x -f manpage rep.1.adoc

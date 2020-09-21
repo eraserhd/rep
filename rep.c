@@ -11,9 +11,69 @@
 
 struct sockaddr_in opt_port =
 {
-    .sin_addr = INADDR_LOOPBACK,
+    .sin_family = AF_INET,
+    .sin_addr = htonl(INADDR_LOOPBACK),
     .sin_port = 0,
 };
+
+int nrepl_sock = -1;
+
+void nrepl_exec(const char* code)
+{
+    printf("::0\n");
+    fflush(stdout);
+
+    nrepl_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (nrepl_sock == -1)
+    {
+        perror("socket");
+        exit(1);
+    }
+
+    printf("::00 %s %u\n", inet_ntoa(opt_port.sin_addr), ntohs(opt_port.sin_port));
+    fflush(stdout);
+
+    if (-1 == connect(nrepl_sock, (struct sockaddr*)&opt_port, sizeof(opt_port)))
+    {
+        perror("connect");
+        exit(1);
+    }
+
+    printf("::1\n");
+    fflush(stdout);
+
+    char message[512];
+    //snprintf(message, sizeof(message), "d2:op4:eval4:code%lu:%se\n", strlen(code), code);
+    snprintf(message, sizeof(message), "d2:op5:clonee");
+
+    printf("::2 %s\n", message);
+    fflush(stdout);
+
+    if (send(nrepl_sock, message, strlen(message), 0) != strlen(message))
+    {
+        perror("send");
+        exit(1);
+    }
+
+    int message_offset = 0;
+    for (;;)
+    {
+        int result = recv(nrepl_sock, message + message_offset, sizeof(message) - message_offset, 0);
+        if (result < 0)
+        {
+            perror("recv");
+            exit(1);
+        }
+
+        fwrite(message + message_offset, 1, result, stdout);
+        fflush(stdout);
+
+        message_offset += result;
+    }
+
+    close(nrepl_sock);
+}
+
 
 char *read_file(const char* filename, char* buffer, size_t buffer_size)
 {
@@ -107,6 +167,9 @@ int main(int argc, char *argv[])
             resolve_port_option(optarg);
             has_port = true;
             break;
+
+        case '?':
+            exit(1);
         }
     }
 
@@ -114,9 +177,7 @@ int main(int argc, char *argv[])
         resolve_port_option("@.nrepl-port");
 
     char* code = collect_code(argc, argv, optind);
-
-    printf("code::%s::\n", code);
-
+    nrepl_exec(code);
     free(code);
     exit(0);
 }
