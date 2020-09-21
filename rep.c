@@ -15,23 +15,33 @@ struct sockaddr_in opt_port =
     .sin_port = 0,
 };
 
+char *read_file(const char* filename, char* buffer, size_t buffer_size)
+{
+    FILE *portfile = fopen(filename, "r");
+    if (NULL == portfile)
+    {
+        fclose(portfile);
+        return NULL;
+    }
+    if (NULL == fgets(buffer, buffer_size, portfile))
+    {
+        fclose(portfile);
+        return NULL;
+    }
+    fclose(portfile);
+    return buffer;
+}
+
 void resolve_port_option(const char* port)
 {
     if (*port == '@')
     {
         char linebuffer[256];
-        FILE *portfile = fopen(port + 1, "r");
-        if (NULL == portfile)
+        if (!read_file(port + 1, linebuffer, sizeof(linebuffer)))
         {
             perror(port + 1);
             exit(1);
         }
-        if (NULL == fgets(linebuffer, sizeof(linebuffer), portfile))
-        {
-            perror(port + 1);
-            exit(1);
-        }
-        fclose(portfile);
         resolve_port_option(linebuffer);
         return;
     }
