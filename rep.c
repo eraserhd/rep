@@ -23,6 +23,8 @@ void error(const char* what)
 
 /* --- breader ------------------------------------------------------------ */
 
+typedef void (* breader_callback_t) (void* cookie, const char* key, const char* bytevalue, size_t bytelength, int intvalue);
+
 struct breader
 {
     int fd;
@@ -30,12 +32,12 @@ struct breader
     _Bool want_dictionary_key;
     char* current_dictionary_key;
     void* cookie;
-    void (* process_message_value) (void* cookie, const char* key, const char* bytevalue, size_t bytelength, int intvalue);
+    breader_callback_t process_message_value;
 };
 
 void breader_read(struct breader* reader);
 
-struct breader* make_breader(int fd, void* cookie, void (* process_message_value) (void*, const char*, const char*, size_t, int))
+struct breader* make_breader(int fd, void* cookie, breader_callback_t process_message_value)
 {
     struct breader* reader = (struct breader*)malloc(sizeof(struct breader));
     reader->fd = fd;
