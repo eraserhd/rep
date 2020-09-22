@@ -34,14 +34,14 @@ struct breader
 
 void read_bencode(struct breader* decoder);
 
-struct breader* make_breader(int fd)
+struct breader* make_breader(int fd, void (* process_message_value) (const char*, const char*, size_t, int))
 {
     struct breader* decoder = (struct breader*)malloc(sizeof(struct breader));
     decoder->fd = fd;
     decoder->peeked_char = EOF;
     decoder->want_dictionary_key = false;
     decoder->current_dictionary_key = NULL;
-    decoder->process_message_value = NULL;
+    decoder->process_message_value = process_message_value;
     return decoder;
 }
 
@@ -175,6 +175,14 @@ struct sockaddr_in opt_port =
 
 int nrepl_sock = -1;
 
+void handle_message_key(const char* key, const char* bytes, size_t bytelength, int intvalue)
+{
+    if (bytes)
+        printf("%s = %s\n", key, bytes);
+    else
+        printf("%s = %d\n", key, intvalue);
+}
+
 void nrepl_exec(const char* code)
 {
     printf("::0\n");
@@ -203,6 +211,7 @@ void nrepl_exec(const char* code)
     //snprintf(message, sizeof(message), "d2:op4:eval4:code%lu:%se\n", strlen(code), code);
     snprintf(message, sizeof(message), "d2:op5:clonee");
 
+
     printf("::2 %s\n", message);
     fflush(stdout);
 
@@ -212,20 +221,10 @@ void nrepl_exec(const char* code)
         exit(1);
     }
 
-    int message_offset = 0;
+    struct breader *decode = make_breader(nrepl_sock, handle_message_key);
     for (;;)
     {
-        int result = recv(nrepl_sock, message + message_offset, sizeof(message) - message_offset, 0);
-        if (result < 0)
-        {
-            perror("recv");
-            exit(1);
-        }
-
-        fwrite(message + message_offset, 1, result, stdout);
-        fflush(stdout);
-
-        message_offset += result;
+        read_bencode(decode);
     }
 
     close(nrepl_sock);
