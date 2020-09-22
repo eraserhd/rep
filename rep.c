@@ -30,7 +30,7 @@ void error(const char* what)
     exit(1);
 }
 
-struct bdecoder
+struct breader
 {
     int fd;
     int peeked_char;
@@ -39,9 +39,9 @@ struct bdecoder
     void (* process_message_value) (const char* key, const char* bytevalue, size_t bytelength, int intvalue);
 };
 
-struct bdecoder* make_bdecoder(int fd)
+struct breader* make_breader(int fd)
 {
-    struct bdecoder* decoder = (struct bdecoder*)malloc(sizeof(struct bdecoder));
+    struct breader* decoder = (struct breader*)malloc(sizeof(struct breader));
     decoder->fd = fd;
     decoder->peeked_char = EOF;
     decoder->want_dictionary_key = false;
@@ -50,7 +50,7 @@ struct bdecoder* make_bdecoder(int fd)
     return decoder;
 }
 
-int next_char(struct bdecoder* decoder)
+int next_char(struct breader* decoder)
 {
     if (EOF != decoder->peeked_char)
     {
@@ -67,16 +67,16 @@ int next_char(struct bdecoder* decoder)
     return ch;
 }
 
-int peek_char(struct bdecoder* decoder)
+int peek_char(struct breader* decoder)
 {
     if (EOF == decoder->peeked_char)
         decoder->peeked_char = next_char(decoder);
     return decoder->peeked_char;
 }
 
-void read_bencode(struct bdecoder* decoder);
+void read_bencode(struct breader* decoder);
 
-void read_bencode_dictionary(struct bdecoder* decoder)
+void read_bencode_dictionary(struct breader* decoder)
 {
     next_char(decoder);
     while('e' != peek_char(decoder))
@@ -94,7 +94,7 @@ void read_bencode_dictionary(struct bdecoder* decoder)
     next_char(decoder);
 }
 
-void read_bencode_list(struct bdecoder* decoder)
+void read_bencode_list(struct breader* decoder)
 {
     next_char(decoder);
     while('e' != peek_char(decoder))
@@ -102,7 +102,7 @@ void read_bencode_list(struct bdecoder* decoder)
     next_char(decoder);
 }
 
-void read_bencode_integer(struct bdecoder* decoder)
+void read_bencode_integer(struct breader* decoder)
 {
     int value = 0;
     _Bool negative = false;
@@ -122,7 +122,7 @@ void read_bencode_integer(struct bdecoder* decoder)
         decoder->process_message_value(decoder->current_dictionary_key, NULL, 0, value);
 }
 
-void read_bencode_bytestring(struct bdecoder* decoder)
+void read_bencode_bytestring(struct breader* decoder)
 {
     size_t length = 0;
     char *bytes = NULL;
@@ -147,7 +147,7 @@ void read_bencode_bytestring(struct bdecoder* decoder)
     }
 }
 
-void read_bencode(struct bdecoder* decoder)
+void read_bencode(struct breader* decoder)
 {
     switch (peek_char(decoder))
     {
