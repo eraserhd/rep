@@ -186,9 +186,16 @@ struct sockaddr_in opt_port =
 };
 
 int nrepl_sock = -1;
+_Bool nrepl_done = false;
+char *nrepl_session = NULL;
 
 void handle_message_key(void* cookie, const char* key, const char* bytes, size_t bytelength, int intvalue)
 {
+    if (!strcmp(key, "status") && bytes != NULL && !strcmp(bytes, "done"))
+        nrepl_done = true;
+    if (!strcmp(key, "new-session") && bytes != NULL)
+        nrepl_session = strdup(bytes);
+
     if (bytes)
         printf("%s = %s\n", key, bytes);
     else
@@ -209,7 +216,21 @@ void nrepl_exec(const char* code)
         error("send");
 
     struct breader *decode = make_breader(nrepl_sock, NULL, handle_message_key);
-    for (;;)
+
+    nrepl_done = false;
+    while (!nrepl_done)
+        breader_read(decode);
+
+    char* eval_message = (char*)malloc(strlen(code) + 128);
+    sprintf(eval_message, "d2:op4:eval7:session%lu:%s4:code%lu:%se",
+        strlen(nrepl_session), nrepl_session,
+        strlen(code), code);
+
+    if (send(nrepl_sock, eval_message, strlen(eval_message), 0) != strlen(eval_message))
+        error("send");
+
+    nrepl_done = false;
+    while (!nrepl_done)
         breader_read(decode);
 
     free_breader(decode);
