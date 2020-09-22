@@ -201,15 +201,9 @@ void nrepl_exec(const char* code)
     if (-1 == connect(nrepl_sock, (struct sockaddr*)&opt_port, sizeof(opt_port)))
         error("connect");
 
-    char message[512];
-    //snprintf(message, sizeof(message), "d2:op4:eval4:code%lu:%se\n", strlen(code), code);
-    snprintf(message, sizeof(message), "d2:op5:clonee");
+    const char CLONE_MESSAGE[] = "d2:op5:clonee";
 
-
-    printf("::2 %s\n", message);
-    fflush(stdout);
-
-    if (send(nrepl_sock, message, strlen(message), 0) != strlen(message))
+    if (send(nrepl_sock, CLONE_MESSAGE, strlen(CLONE_MESSAGE), 0) != strlen(CLONE_MESSAGE))
         error("send");
 
     struct breader *decode = make_breader(nrepl_sock, handle_message_key);
