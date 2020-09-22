@@ -32,7 +32,7 @@ struct breader
     void (* process_message_value) (const char* key, const char* bytevalue, size_t bytelength, int intvalue);
 };
 
-void read_bencode(struct breader* decoder);
+void bread(struct breader* decoder);
 
 struct breader* make_breader(int fd, void (* process_message_value) (const char*, const char*, size_t, int))
 {
@@ -45,7 +45,7 @@ struct breader* make_breader(int fd, void (* process_message_value) (const char*
     return decoder;
 }
 
-int next_char(struct breader* decoder)
+int bread_next_char(struct breader* decoder)
 {
     if (EOF != decoder->peeked_char)
     {
@@ -62,72 +62,72 @@ int next_char(struct breader* decoder)
     return ch;
 }
 
-int peek_char(struct breader* decoder)
+int bread_peek_char(struct breader* decoder)
 {
     if (EOF == decoder->peeked_char)
-        decoder->peeked_char = next_char(decoder);
+        decoder->peeked_char = bread_next_char(decoder);
     return decoder->peeked_char;
 }
 
-void read_bencode_dictionary(struct breader* decoder)
+void bread_dictionary(struct breader* decoder)
 {
-    next_char(decoder);
-    while('e' != peek_char(decoder))
+    bread_next_char(decoder);
+    while('e' != bread_peek_char(decoder))
     {
         decoder->want_dictionary_key = true;
-        read_bencode(decoder);
+        bread(decoder);
         decoder->want_dictionary_key = false;
-        read_bencode(decoder);
+        bread(decoder);
         if (decoder->current_dictionary_key)
         {
             free(decoder->current_dictionary_key);
             decoder->current_dictionary_key = NULL;
         }
     }
-    next_char(decoder);
+    bread_next_char(decoder);
 }
 
-void read_bencode_list(struct breader* decoder)
+void bread_list(struct breader* decoder)
 {
-    next_char(decoder);
-    while('e' != peek_char(decoder))
-        read_bencode(decoder);
-    next_char(decoder);
+    bread_next_char(decoder);
+    while('e' != bread_peek_char(decoder))
+        bread(decoder);
+    bread_next_char(decoder);
 }
 
-void read_bencode_integer(struct breader* decoder)
+void bread_integer(struct breader* decoder)
 {
     int value = 0;
     _Bool negative = false;
-    next_char(decoder);
-    while('e' != peek_char(decoder))
+    bread_next_char(decoder);
+    while('e' != bread_peek_char(decoder))
     {
-        int ch = next_char(decoder);
+        int ch = bread_next_char(decoder);
         if (ch == '-')
             negative = true;
         else
             value = value * 10 + (ch - '0');
     }
-    next_char(decoder);
+    bread_next_char(decoder);
     if (negative)
         value = -value;
     if (decoder->current_dictionary_key)
         decoder->process_message_value(decoder->current_dictionary_key, NULL, 0, value);
 }
 
-void read_bencode_bytestring(struct breader* decoder)
+void bread_bytestring(struct breader* decoder)
 {
     size_t length = 0;
     char *bytes = NULL;
-    while (':' != peek_char(decoder))
-        length = length*10 + (next_char(decoder) - '0');
-    next_char(decoder);
+    while (':' != bread_peek_char(decoder))
+        length = length*10 + (bread_next_char(decoder) - '0');
+    bread_next_char(decoder);
     
     bytes = (char*)malloc(length + 1);
     if (NULL == bytes)
         error("malloc");
     for (size_t i = 0; i < length; i++)
-        bytes[i] = next_char(decoder);
+        bytes[i] = bread_next_char(decoder);
     bytes[length] = '\0';
     
     if (decoder->want_dictionary_key)
@@ -140,22 +140,22 @@ void read_bencode_bytestring(struct breader* decoder)
     }
 }
 
-void read_bencode(struct breader* decoder)
+void bread(struct breader* decoder)
 {
-    switch (peek_char(decoder))
+    switch (bread_peek_char(decoder))
     {
     case 'd':
-        read_bencode_dictionary(decoder);
+        bread_dictionary(decoder);
         break;
     case 'l':
-        read_bencode_list(decoder);
+        bread_list(decoder);
         break;
     case 'i':
-        read_bencode_integer(decoder);
+        bread_integer(decoder);
         break;
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
-        read_bencode_bytestring(decoder);
+        bread_bytestring(decoder);
         break;
     case EOF:
         fail("Unexpected EOF");
@@ -224,7 +224,7 @@ void nrepl_exec(const char* code)
     struct breader *decode = make_breader(nrepl_sock, handle_message_key);
     for (;;)
     {
-        read_bencode(decode);
+        bread(decode);
     }
 
     close(nrepl_sock);
