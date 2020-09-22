@@ -32,29 +32,39 @@ struct breader
     void (* process_message_value) (const char* key, const char* bytevalue, size_t bytelength, int intvalue);
 };
 
-void bread(struct breader* decoder);
+void breader_read(struct breader* reader);
 
 struct breader* make_breader(int fd, void (* process_message_value) (const char*, const char*, size_t, int))
 {
-    struct breader* decoder = (struct breader*)malloc(sizeof(struct breader));
-    decoder->fd = fd;
-    decoder->peeked_char = EOF;
-    decoder->want_dictionary_key = false;
-    decoder->current_dictionary_key = NULL;
-    decoder->process_message_value = process_message_value;
-    return decoder;
+    struct breader* reader = (struct breader*)malloc(sizeof(struct breader));
+    reader->fd = fd;
+    reader->peeked_char = EOF;
+    reader->want_dictionary_key = false;
+    reader->current_dictionary_key = NULL;
+    reader->process_message_value = process_message_value;
+    return reader;
 }
 
-int bread_next_char(struct breader* decoder)
+void free_breader(struct breader* reader)
 {
-    if (EOF != decoder->peeked_char)
+    if (reader->current_dictionary_key)
     {
-        int result = decoder->peeked_char;
-        decoder->peeked_char = EOF;
+        free(reader->current_dictionary_key);
+        reader->current_dictionary_key = NULL;
+    }
+    free(reader);
+}
+
+int bread_next_char(struct breader* reader)
+{
+    if (EOF != reader->peeked_char)
+    {
+        int result = reader->peeked_char;
+        reader->peeked_char = EOF;
         return result;
     }
     char ch = 0;
-    int count = recv(decoder->fd, &ch, 1, 0);
+    int count = recv(reader->fd, &ch, 1, 0);
     if (count < 0)
         error("recv");
     if (0 == count)
@@ -62,100 +72,100 @@ int bread_next_char(struct breader* decoder)
     return ch;
 }
 
-int bread_peek_char(struct breader* decoder)
+int bread_peek_char(struct breader* reader)
 {
-    if (EOF == decoder->peeked_char)
-        decoder->peeked_char = bread_next_char(decoder);
-    return decoder->peeked_char;
+    if (EOF == reader->peeked_char)
+        reader->peeked_char = bread_next_char(reader);
+    return reader->peeked_char;
 }
 
-void bread_dictionary(struct breader* decoder)
+void bread_dictionary(struct breader* reader)
 {
-    bread_next_char(decoder);
-    while('e' != bread_peek_char(decoder))
+    bread_next_char(reader);
+    while('e' != bread_peek_char(reader))
     {
-        decoder->want_dictionary_key = true;
-        bread(decoder);
-        decoder->want_dictionary_key = false;
-        bread(decoder);
-        if (decoder->current_dictionary_key)
+        reader->want_dictionary_key = true;
+        breader_read(reader);
+        reader->want_dictionary_key = false;
+        breader_read(reader);
+        if (reader->current_dictionary_key)
         {
-            free(decoder->current_dictionary_key);
-            decoder->current_dictionary_key = NULL;
+            free(reader->current_dictionary_key);
+            reader->current_dictionary_key = NULL;
         }
     }
-    bread_next_char(decoder);
+    bread_next_char(reader);
 }
 
-void bread_list(struct breader* decoder)
+void bread_list(struct breader* reader)
 {
-    bread_next_char(decoder);
-    while('e' != bread_peek_char(decoder))
-        bread(decoder);
-    bread_next_char(decoder);
+    bread_next_char(reader);
+    while('e' != bread_peek_char(reader))
+        breader_read(reader);
+    bread_next_char(reader);
 }
 
-void bread_integer(struct breader* decoder)
+void bread_integer(struct breader* reader)
 {
     int value = 0;
     _Bool negative = false;
-    bread_next_char(decoder);
-    while('e' != bread_peek_char(decoder))
+    bread_next_char(reader);
+    while('e' != bread_peek_char(reader))
     {
-        int ch = bread_next_char(decoder);
+        int ch = bread_next_char(reader);
         if (ch == '-')
             negative = true;
         else
             value = value * 10 + (ch - '0');
     }
-    bread_next_char(decoder);
+    bread_next_char(reader);
     if (negative)
         value = -value;
-    if (decoder->current_dictionary_key)
-        decoder->process_message_value(decoder->current_dictionary_key, NULL, 0, value);
+    if (reader->current_dictionary_key)
+        reader->process_message_value(reader->current_dictionary_key, NULL, 0, value);
 }
 
-void bread_bytestring(struct breader* decoder)
+void bread_bytestring(struct breader* reader)
 {
     size_t length = 0;
     char *bytes = NULL;
-    while (':' != bread_peek_char(decoder))
-        length = length*10 + (bread_next_char(decoder) - '0');
-    bread_next_char(decoder);
+    while (':' != bread_peek_char(reader))
+        length = length*10 + (bread_next_char(reader) - '0');
+    bread_next_char(reader);
     
     bytes = (char*)malloc(length + 1);
     if (NULL == bytes)
         error("malloc");
     for (size_t i = 0; i < length; i++)
-        bytes[i] = bread_next_char(decoder);
+        bytes[i] = bread_next_char(reader);
     bytes[length] = '\0';
     
-    if (decoder->want_dictionary_key)
-        decoder->current_dictionary_key = bytes;
+    if (reader->want_dictionary_key)
+        reader->current_dictionary_key = bytes;
     else
     {
-        if (decoder->current_dictionary_key)
-            decoder->process_message_value(decoder->current_dictionary_key, bytes, length, 0);
+        if (reader->current_dictionary_key)
+            reader->process_message_value(reader->current_dictionary_key, bytes, length, 0);
         free(bytes);
     }
 }
 
-void bread(struct breader* decoder)
+void breader_read(struct breader* reader)
 {
-    switch (bread_peek_char(decoder))
+    switch (bread_peek_char(reader))
     {
     case 'd':
-        bread_dictionary(decoder);
+        bread_dictionary(reader);
         break;
     case 'l':
-        bread_list(decoder);
+        bread_list(reader);
         break;
     case 'i':
-        bread_integer(decoder);
+        bread_integer(reader);
         break;
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
-        bread_bytestring(decoder);
+        bread_bytestring(reader);
         break;
     case EOF:
         fail("Unexpected EOF");
@@ -224,9 +234,10 @@ void nrepl_exec(const char* code)
     struct breader *decode = make_breader(nrepl_sock, handle_message_key);
     for (;;)
     {
-        bread(decode);
+        breader_read(decode);
     }
 
+    free_breader(decode);
     close(nrepl_sock);
 }
 
