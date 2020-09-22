@@ -18,6 +18,159 @@ struct sockaddr_in opt_port =
 
 int nrepl_sock = -1;
 
+void fail(const char* message)
+{
+    fprintf(stderr, "%s\n", message);
+    exit(1);
+}
+
+void error(const char* what)
+{
+    perror(what);
+    exit(1);
+}
+
+struct bdecoder
+{
+    int fd;
+    int peeked_char;
+    _Bool want_dictionary_key;
+    char* current_dictionary_key;
+    void (* process_message_value) (const char* key, const char* bytevalue, size_t bytelength, int intvalue);
+};
+
+struct bdecoder* make_bdecoder(int fd)
+{
+    struct bdecoder* decoder = (struct bdecoder*)malloc(sizeof(struct bdecoder));
+    decoder->fd = fd;
+    decoder->peeked_char = EOF;
+    decoder->want_dictionary_key = false;
+    decoder->current_dictionary_key = NULL;
+    decoder->process_message_value = NULL;
+    return decoder;
+}
+
+int next_char(struct bdecoder* decoder)
+{
+    if (EOF != decoder->peeked_char)
+    {
+        int result = decoder->peeked_char;
+        decoder->peeked_char = EOF;
+        return result;
+    }
+    char ch = 0;
+    int count = recv(decoder->fd, &ch, 1, 0);
+    if (count < 0)
+        error("recv");
+    if (0 == count)
+        return EOF;
+    return ch;
+}
+
+int peek_char(struct bdecoder* decoder)
+{
+    if (EOF == decoder->peeked_char)
+        decoder->peeked_char = next_char(decoder);
+    return decoder->peeked_char;
+}
+
+void read_bencode(struct bdecoder* decoder);
+
+void read_bencode_dictionary(struct bdecoder* decoder)
+{
+    next_char(decoder);
+    while('e' != peek_char(decoder))
+    {
+        decoder->want_dictionary_key = true;
+        read_bencode(decoder);
+        decoder->want_dictionary_key = false;
+        read_bencode(decoder);
+        if (decoder->current_dictionary_key)
+        {
+            free(decoder->current_dictionary_key);
+            decoder->current_dictionary_key = NULL;
+        }
+    }
+    next_char(decoder);
+}
+
+void read_bencode_list(struct bdecoder* decoder)
+{
+    next_char(decoder);
+    while('e' != peek_char(decoder))
+        read_bencode(decoder);
+    next_char(decoder);
+}
+
+void read_bencode_integer(struct bdecoder* decoder)
+{
+    int value = 0;
+    _Bool negative = false;
+    next_char(decoder);
+    while('e' != peek_char(decoder))
+    {
+        int ch = next_char(decoder);
+        if (ch == '-')
+            negative = true;
+        else
+            value = value * 10 + (ch - '0');
+    }
+    next_char(decoder);
+    if (negative)
+        value = -value;
+    if (decoder->current_dictionary_key)
+        decoder->process_message_value(decoder->current_dictionary_key, NULL, 0, value);
+}
+
+void read_bencode_bytestring(struct bdecoder* decoder)
+{
+    size_t length = 0;
+    char *bytes = NULL;
+    while (':' != peek_char(decoder))
+        length = length*10 + (next_char(decoder) - '0');
+    next_char(decoder);
+    
+    bytes = (char*)malloc(length + 1);
+    if (NULL == bytes)
+        error("malloc");
+    for (size_t i = 0; i < length; i++)
+        bytes[i] = next_char(decoder);
+    bytes[length] = '\0';
+    
+    if (decoder->want_dictionary_key)
+        decoder->current_dictionary_key = bytes;
+    else
+    {
+        if (decoder->current_dictionary_key)
+            decoder->process_message_value(decoder->current_dictionary_key, bytes, length, 0);
+        free(bytes);
+    }
+}
+
+void read_bencode(struct bdecoder* decoder)
+{
+    switch (peek_char(decoder))
+    {
+    case 'd':
+        read_bencode_dictionary(decoder);
+        break;
+    case 'l':
+        read_bencode_list(decoder);
+        break;
+    case 'i':
+        read_bencode_integer(decoder);
+        break;
+    case '0': case '1': case '2': case '3': case '4':
+    case '5': case '6': case '7': case '8': case '9':
+        read_bencode_bytestring(decoder);
+        break;
+    case EOF:
+        fail("Unexpected EOF");
+    default:
+        fail("bad character in nREPL stream");
+    }
+}
+
 void nrepl_exec(const char* code)
 {
     printf("::0\n");
