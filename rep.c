@@ -221,10 +221,7 @@ char *read_file(const char* filename, char* buffer, size_t buffer_size)
 {
     FILE *portfile = fopen(filename, "r");
     if (NULL == portfile)
-    {
-        fclose(portfile);
         return NULL;
-    }
     if (NULL == fgets(buffer, buffer_size, portfile))
     {
         fclose(portfile);
