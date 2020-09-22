@@ -30,6 +30,8 @@ void error(const char* what)
     exit(1);
 }
 
+/* --- breader ------------------------------------------------------------ */
+
 struct breader
 {
     int fd;
@@ -38,6 +40,8 @@ struct breader
     char* current_dictionary_key;
     void (* process_message_value) (const char* key, const char* bytevalue, size_t bytelength, int intvalue);
 };
+
+void read_bencode(struct breader* decoder);
 
 struct breader* make_breader(int fd)
 {
@@ -73,8 +77,6 @@ int peek_char(struct breader* decoder)
         decoder->peeked_char = next_char(decoder);
     return decoder->peeked_char;
 }
-
-void read_bencode(struct breader* decoder);
 
 void read_bencode_dictionary(struct breader* decoder)
 {
@@ -170,6 +172,8 @@ void read_bencode(struct breader* decoder)
         fail("bad character in nREPL stream");
     }
 }
+
+/* ------------------------------------------------------------------------ */
 
 void nrepl_exec(const char* code)
 {
