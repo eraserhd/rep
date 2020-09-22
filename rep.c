@@ -195,27 +195,11 @@ void handle_message_key(const char* key, const char* bytes, size_t bytelength, i
 
 void nrepl_exec(const char* code)
 {
-    printf("::0\n");
-    fflush(stdout);
-
     nrepl_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (nrepl_sock == -1)
-    {
-        perror("socket");
-        exit(1);
-    }
-
-    printf("::00 %s %u\n", inet_ntoa(opt_port.sin_addr), ntohs(opt_port.sin_port));
-    fflush(stdout);
-
+        error("socket");
     if (-1 == connect(nrepl_sock, (struct sockaddr*)&opt_port, sizeof(opt_port)))
-    {
-        perror("connect");
-        exit(1);
-    }
-
-    printf("::1\n");
-    fflush(stdout);
+        error("connect");
 
     char message[512];
     //snprintf(message, sizeof(message), "d2:op4:eval4:code%lu:%se\n", strlen(code), code);
@@ -226,16 +210,11 @@ void nrepl_exec(const char* code)
     fflush(stdout);
 
     if (send(nrepl_sock, message, strlen(message), 0) != strlen(message))
-    {
-        perror("send");
-        exit(1);
-    }
+        error("send");
 
     struct breader *decode = make_breader(nrepl_sock, handle_message_key);
     for (;;)
-    {
         breader_read(decode);
-    }
 
     free_breader(decode);
     close(nrepl_sock);
@@ -265,10 +244,7 @@ void resolve_port_option(const char* port)
     {
         char linebuffer[256];
         if (!read_file(port + 1, linebuffer, sizeof(linebuffer)))
-        {
-            perror(port + 1);
-            exit(1);
-        }
+            error(port + 1);
         resolve_port_option(linebuffer);
         return;
     }
@@ -283,10 +259,7 @@ void resolve_port_option(const char* port)
         {
             struct hostent *ent = gethostbyname(host_part);
             if (NULL == ent)
-            {
-                perror(host_part);
-                exit(1);
-            }
+                error(host_part);
             if (NULL == ent->h_addr)
             {
                 fprintf(stderr, "%s has no addresses\n", host_part);
