@@ -9,15 +9,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-struct sockaddr_in opt_port =
-{
-    .sin_family = AF_INET,
-    .sin_addr = htonl(INADDR_LOOPBACK),
-    .sin_port = 0,
-};
-
-int nrepl_sock = -1;
-
 void fail(const char* message)
 {
     fprintf(stderr, "%s\n", message);
@@ -174,6 +165,15 @@ void read_bencode(struct breader* decoder)
 }
 
 /* ------------------------------------------------------------------------ */
+
+struct sockaddr_in opt_port =
+{
+    .sin_family = AF_INET,
+    .sin_addr = htonl(INADDR_LOOPBACK),
+    .sin_port = 0,
+};
+
+int nrepl_sock = -1;
 
 void nrepl_exec(const char* code)
 {
