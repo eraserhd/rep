@@ -29,18 +29,20 @@ struct breader
     int peeked_char;
     _Bool want_dictionary_key;
     char* current_dictionary_key;
-    void (* process_message_value) (const char* key, const char* bytevalue, size_t bytelength, int intvalue);
+    void* cookie;
+    void (* process_message_value) (void* cookie, const char* key, const char* bytevalue, size_t bytelength, int intvalue);
 };
 
 void breader_read(struct breader* reader);
 
-struct breader* make_breader(int fd, void (* process_message_value) (const char*, const char*, size_t, int))
+struct breader* make_breader(int fd, void* cookie, void (* process_message_value) (void*, const char*, const char*, size_t, int))
 {
     struct breader* reader = (struct breader*)malloc(sizeof(struct breader));
     reader->fd = fd;
     reader->peeked_char = EOF;
     reader->want_dictionary_key = false;
     reader->current_dictionary_key = NULL;
+    reader->cookie = cookie;
     reader->process_message_value = process_message_value;
     return reader;
 }
@@ -122,7 +124,7 @@ void bread_integer(struct breader* reader)
     if (negative)
         value = -value;
     if (reader->current_dictionary_key)
-        reader->process_message_value(reader->current_dictionary_key, NULL, 0, value);
+        reader->process_message_value(reader->cookie, reader->current_dictionary_key, NULL, 0, value);
 }
 
 void bread_bytestring(struct breader* reader)
@@ -145,7 +147,7 @@ void bread_bytestring(struct breader* reader)
     else
     {
         if (reader->current_dictionary_key)
-            reader->process_message_value(reader->current_dictionary_key, bytes, length, 0);
+            reader->process_message_value(reader->cookie, reader->current_dictionary_key, bytes, length, 0);
         free(bytes);
     }
 }
@@ -185,7 +187,7 @@ struct sockaddr_in opt_port =
 
 int nrepl_sock = -1;
 
-void handle_message_key(const char* key, const char* bytes, size_t bytelength, int intvalue)
+void handle_message_key(void* cookie, const char* key, const char* bytes, size_t bytelength, int intvalue)
 {
     if (bytes)
         printf("%s = %s\n", key, bytes);
@@ -206,7 +208,7 @@ void nrepl_exec(const char* code)
     if (send(nrepl_sock, CLONE_MESSAGE, strlen(CLONE_MESSAGE), 0) != strlen(CLONE_MESSAGE))
         error("send");
 
-    struct breader *decode = make_breader(nrepl_sock, handle_message_key);
+    struct breader *decode = make_breader(nrepl_sock, NULL, handle_message_key);
     for (;;)
         breader_read(decode);
 
