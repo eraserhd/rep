@@ -204,14 +204,14 @@ char *read_file(const char* filename, char* buffer, size_t buffer_size)
     return buffer;
 }
 
-struct sockaddr_in options_port(struct options* options, const char* port)
+struct sockaddr_in options_address(struct options* options, const char* port)
 {
     if (*port == '@')
     {
         char linebuffer[256];
         if (!read_file(port + 1, linebuffer, sizeof(linebuffer)))
             error(port + 1);
-        return options_port(options, linebuffer);
+        return options_address(options, linebuffer);
     }
     struct sockaddr_in address = {
         .sin_family = AF_INET,
@@ -420,7 +420,7 @@ void nrepl_exec(struct options* options)
 {
     struct nrepl* nrepl = make_nrepl();
 
-    struct sockaddr_in address = options_port(options, options->port);
+    struct sockaddr_in address = options_address(options, options->port);
     if (-1 == connect(nrepl->fd, (struct sockaddr*)&address, sizeof(address)))
         error("connect");
 
