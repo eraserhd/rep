@@ -314,6 +314,7 @@ void free_options(struct options* options)
 
 struct nrepl
 {
+    int fd;
     _Bool request_done;
     char* session;
 };
@@ -321,6 +322,7 @@ struct nrepl
 struct nrepl* make_nrepl(void)
 {
     struct nrepl* nrepl = (struct nrepl*)malloc(sizeof(struct nrepl));
+    nrepl->fd = -1;
     nrepl->request_done = false;
     nrepl->session = NULL;
     return nrepl;
@@ -330,6 +332,8 @@ void free_nrepl(struct nrepl* nrepl)
 {
     if (nrepl->session)
         free(nrepl->session);
+    if (nrepl->fd >= 0)
+        close(nrepl->fd);
     free(nrepl);
 }
 
@@ -357,18 +361,18 @@ void nrepl_exec(struct options* options)
 {
     struct nrepl* nrepl = make_nrepl();
 
-    int nrepl_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (nrepl_sock == -1)
+    nrepl->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (nrepl->fd == -1)
         error("socket");
-    if (-1 == connect(nrepl_sock, (struct sockaddr*)&options->address, sizeof(options->address)))
+    if (-1 == connect(nrepl->fd, (struct sockaddr*)&options->address, sizeof(options->address)))
         error("connect");
 
     const char CLONE_MESSAGE[] = "d2:op5:clonee";
 
-    if (send(nrepl_sock, CLONE_MESSAGE, strlen(CLONE_MESSAGE), 0) != strlen(CLONE_MESSAGE))
+    if (send(nrepl->fd, CLONE_MESSAGE, strlen(CLONE_MESSAGE), 0) != strlen(CLONE_MESSAGE))
         error("send");
 
-    struct breader *decode = make_breader(nrepl_sock, nrepl, (breader_callback_t)handle_message_key);
+    struct breader *decode = make_breader(nrepl->fd, nrepl, (breader_callback_t)handle_message_key);
 
     nrepl->request_done = false;
     while (!nrepl->request_done)
@@ -380,7 +384,7 @@ void nrepl_exec(struct options* options)
         strlen(nrepl->session), nrepl->session,
         strlen(options->code), options->code);
 
-    if (send(nrepl_sock, eval_message, strlen(eval_message), 0) != strlen(eval_message))
+    if (send(nrepl->fd, eval_message, strlen(eval_message), 0) != strlen(eval_message))
         error("send");
 
     free(eval_message);
@@ -394,7 +398,7 @@ void nrepl_exec(struct options* options)
     snprintf(close_message, sizeof(close_message), "d2:op5:close7:session%lu:%se",
         strlen(nrepl->session), nrepl->session);
 
-    if (send(nrepl_sock, close_message, strlen(close_message), 0) != strlen(close_message))
+    if (send(nrepl->fd, close_message, strlen(close_message), 0) != strlen(close_message))
         error("send");
 
     nrepl->request_done = false;
@@ -402,8 +406,6 @@ void nrepl_exec(struct options* options)
         breader_read(decode);
 
     free_breader(decode);
-    close(nrepl_sock);
-
     free_nrepl(nrepl);
 }
 
