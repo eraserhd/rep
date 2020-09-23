@@ -484,6 +484,10 @@ void nrepl_exec(struct options* options)
     char extra_options[512] = "";
     if (options->line != -1)
         sprintf(extra_options + strlen(extra_options), "4:linei%de", options->line);
+    if (options->column != -1)
+        sprintf(extra_options + strlen(extra_options), "6:columni%de", options->column);
+    if (options->filename)
+        sprintf(extra_options + strlen(extra_options), "4:file%lu:%s", strlen(options->filename), options->filename);
 
     nrepl_send(nrepl, "d2:op%lu:%s2:ns%lu:%s7:session%lu:%s4:code%lu:%s%se",
         strlen(options->op), options->op,
