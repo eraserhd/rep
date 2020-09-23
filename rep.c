@@ -271,6 +271,8 @@ enum {
     OPT_OP = 127,
 };
 
+
+const char SHORT_OPTIONS[] = "hl:n:p:";
 const struct option LONG_OPTIONS[] =
 {
     { "help",      0, NULL, 'h' },
@@ -341,7 +343,7 @@ struct options* parse_options(int argc, char* argv[])
 {
     struct options* options = new_options();
     int opt;
-    while ((opt = getopt_long(argc, argv, "l:n:p:", LONG_OPTIONS, NULL)) != -1)
+    while ((opt = getopt_long(argc, argv, SHORT_OPTIONS, LONG_OPTIONS, NULL)) != -1)
     {
         switch (opt)
         {
