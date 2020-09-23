@@ -339,6 +339,12 @@ void free_nrepl(struct nrepl* nrepl)
     free(nrepl);
 }
 
+void nrepl_send(struct nrepl* nrepl, const char* message)
+{
+    if (send(nrepl->fd, message, strlen(message), 0) != strlen(message))
+        error("send");
+}
+
 void handle_message_key(struct nrepl* nrepl, const char* key, const char* bytes, size_t bytelength, int intvalue)
 {
     if (bytes != NULL)
@@ -362,16 +368,12 @@ void handle_message_key(struct nrepl* nrepl, const char* key, const char* bytes,
 void nrepl_exec(struct options* options)
 {
     struct nrepl* nrepl = make_nrepl();
+    struct breader *decode = make_breader(nrepl->fd, nrepl, (breader_callback_t)handle_message_key);
 
     if (-1 == connect(nrepl->fd, (struct sockaddr*)&options->address, sizeof(options->address)))
         error("connect");
 
-    const char CLONE_MESSAGE[] = "d2:op5:clonee";
-
-    if (send(nrepl->fd, CLONE_MESSAGE, strlen(CLONE_MESSAGE), 0) != strlen(CLONE_MESSAGE))
-        error("send");
-
-    struct breader *decode = make_breader(nrepl->fd, nrepl, (breader_callback_t)handle_message_key);
+    nrepl_send(nrepl, "d2:op5:clonee");
 
     nrepl->request_done = false;
     while (!nrepl->request_done)
@@ -382,10 +384,7 @@ void nrepl_exec(struct options* options)
         strlen(options->op), options->op,
         strlen(nrepl->session), nrepl->session,
         strlen(options->code), options->code);
-
-    if (send(nrepl->fd, eval_message, strlen(eval_message), 0) != strlen(eval_message))
-        error("send");
-
+    nrepl_send(nrepl, eval_message);
     free(eval_message);
     eval_message = NULL;
 
@@ -396,9 +395,7 @@ void nrepl_exec(struct options* options)
     char close_message[128];
     snprintf(close_message, sizeof(close_message), "d2:op5:close7:session%lu:%se",
         strlen(nrepl->session), nrepl->session);
-
-    if (send(nrepl->fd, close_message, strlen(close_message), 0) != strlen(close_message))
-        error("send");
+    nrepl_send(nrepl, close_message);
 
     nrepl->request_done = false;
     while (!nrepl->request_done)
