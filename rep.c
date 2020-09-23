@@ -338,16 +338,20 @@ void handle_message_key(struct nrepl* nrepl, const char* key, const char* bytes,
     {
         if (!strcmp(key, "status") && !strcmp(bytes, "done"))
             nrepl->request_done = true;
-        if (!strcmp(key, "new-session"))
+        else if (!strcmp(key, "new-session"))
+        {
+            if (nrepl->session)
+                free(nrepl->session);
             nrepl->session = strdup(bytes);
-        if (!strcmp(key, "out"))
+        }
+        else if (!strcmp(key, "out"))
             fwrite(bytes, 1, bytelength, stdout);
-        if (!strcmp(key, "value"))
+        else if (!strcmp(key, "value"))
         {
             fwrite(bytes, 1, bytelength, stdout);
             printf("\n");
         }
-        if (!strcmp(key, "err"))
+        else if (!strcmp(key, "err"))
             fwrite(bytes, 1, bytelength, stderr);
     }
 }
