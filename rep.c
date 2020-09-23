@@ -265,6 +265,25 @@ struct options* parse_options(int argc, char* argv[])
     options->address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     options->address.sin_port = 0;
     options->code = NULL;
+
+    int opt;
+    while ((opt = getopt_long(argc, argv, "p:", LONG_OPTIONS, NULL)) != -1)
+    {
+        switch (opt)
+        {
+        case 'p':
+            resolve_port_option(options, optarg);
+            break;
+
+        case '?':
+            exit(1);
+        }
+    }
+
+    if (0 == options->address.sin_port)
+        resolve_port_option(options, "@.nrepl-port");
+
+    options->code = collect_code(argc, argv, optind);
     return options;
 }
 
@@ -337,24 +356,6 @@ int main(int argc, char *argv[])
 {
     options = parse_options(argc, argv);
 
-    int opt;
-    while ((opt = getopt_long(argc, argv, "p:", LONG_OPTIONS, NULL)) != -1)
-    {
-        switch (opt)
-        {
-        case 'p':
-            resolve_port_option(options, optarg);
-            break;
-
-        case '?':
-            exit(1);
-        }
-    }
-
-    if (0 == options->address.sin_port)
-        resolve_port_option(options, "@.nrepl-port");
-
-    options->code = collect_code(argc, argv, optind);
     nrepl_exec(options->code);
 
     free_options(options);
