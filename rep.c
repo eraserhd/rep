@@ -187,6 +187,7 @@ struct options
     char* namespace;
     char* op;
     char* code;
+    _Bool help;
 };
 
 char *read_file(const char* filename, char* buffer, size_t buffer_size)
@@ -260,6 +261,7 @@ enum {
 
 const struct option LONG_OPTIONS[] =
 {
+    { "help",      0, NULL, 'h' },
     { "namespace", 1, NULL, 'n' },
     { "op",        1, NULL, OPT_OP },
     { "port",      1, NULL, 'p' },
@@ -276,6 +278,7 @@ struct options* new_options(void)
     options->op = strdup("eval");
     options->namespace = strdup("user");
     options->code = NULL;
+    options->help = false;
     return options;
 }
 
@@ -287,20 +290,20 @@ struct options* parse_options(int argc, char* argv[])
     {
         switch (opt)
         {
+        case 'h':
+            options->help = true;
+            break;
         case 'n':
             free(options->namespace);
             options->namespace = strdup(optarg);
             break;
-
         case 'p':
             resolve_port_option(options, optarg);
             break;
-
         case OPT_OP:
             free(options->op);
             options->op = strdup(optarg);
             break;
-
         case '?':
             exit(1);
         }
@@ -430,9 +433,28 @@ void nrepl_exec(struct options* options)
 
 /* ------------------------------------------------------------------------ */
 
+void help(void)
+{
+    printf("\
+rep: Single-shot nREPL client\n\
+Synopsis:\n\
+  rep [OPTIONS] [--] [CODE ...]\n\
+Options:\n\
+  -h, --help          Show this help screen.\n\
+  -n, --namespace=NS  Evaluate code in NS (default: user).\n\
+  --op=OP             nREPL operation (default: eval).\n\
+  -p, --port=ADDRESS  TCP port, host:port, @portfile, or @FNAME@RELATIVE.\n\
+\n");
+}
+
 int main(int argc, char *argv[])
 {
     struct options* options = parse_options(argc, argv);
+    if (options->help)
+    {
+        help();
+        exit(0);
+    }
     nrepl_exec(options);
     free_options(options);
     exit(0);
