@@ -341,6 +341,20 @@ void nrepl_exec(struct options* options)
     if (send(nrepl_sock, eval_message, strlen(eval_message), 0) != strlen(eval_message))
         error("send");
 
+    free(eval_message);
+    eval_message = NULL;
+
+    nrepl_done = false;
+    while (!nrepl_done)
+        breader_read(decode);
+
+    char close_message[128];
+    snprintf(close_message, sizeof(close_message), "d2:op5:close7:session%lu:%se",
+        strlen(nrepl_session), nrepl_session);
+
+    if (send(nrepl_sock, close_message, strlen(close_message), 0) != strlen(close_message))
+        error("send");
+
     nrepl_done = false;
     while (!nrepl_done)
         breader_read(decode);
