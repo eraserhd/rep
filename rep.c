@@ -1,4 +1,5 @@
 #include <alloca.h>
+#include <ctype.h>
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -187,6 +188,9 @@ struct options
     char* namespace;
     char* op;
     char* code;
+    char* filename;
+    int line;
+    int column;
     _Bool help;
 };
 
@@ -270,6 +274,7 @@ enum {
 const struct option LONG_OPTIONS[] =
 {
     { "help",      0, NULL, 'h' },
+    { "line",      1, NULL, 'l' },
     { "namespace", 1, NULL, 'n' },
     { "op",        1, NULL, OPT_OP },
     { "port",      1, NULL, 'p' },
@@ -284,19 +289,67 @@ struct options* new_options(void)
     options->namespace = strdup("user");
     options->code = NULL;
     options->help = false;
+    options->line = -1;
+    options->column = -1;
+    options->filename = NULL;
     return options;
+}
+
+void options_parse_line(struct options* options, const char* line)
+{
+    int colons = 0;
+    int nondigits = 0;
+    for (const char* p = line; *p; ++p)
+    {
+        if (*p == ':')
+            ++colons;
+        else if (!isdigit(*p))
+            ++nondigits;
+    }
+    if (2 == colons)
+    {
+        options->filename = strdup(line);
+        *strchr(options->filename, ':') = '\0';
+        const char* p = strchr(line, ':') + 1;
+        options->line = atoi(p);
+        p = strchr(p, ':') + 1;
+        options->column = atoi(p);
+    }
+    else if (1 == colons && 0 == nondigits)
+    {
+        options->line = atoi(line);
+        options->column = atoi(strchr(line, ':') + 1);
+    }
+    else if (1 == colons)
+    {
+        options->filename = strdup(line);
+        *strchr(options->filename, ':') = '\0';
+        options->line = atoi(strchr(line, ':') + 1);
+    }
+    else if (0 == colons && 0 == nondigits)
+        options->line = atoi(line);
+    else if (0 == colons)
+    {
+        options->filename = strdup(line);
+        options->line = 1;
+    }
+    else
+        fail("invalid value for --line");
 }
 
 struct options* parse_options(int argc, char* argv[])
 {
     struct options* options = new_options();
     int opt;
-    while ((opt = getopt_long(argc, argv, "n:p:", LONG_OPTIONS, NULL)) != -1)
+    while ((opt = getopt_long(argc, argv, "l:n:p:", LONG_OPTIONS, NULL)) != -1)
     {
         switch (opt)
         {
         case 'h':
             options->help = true;
+            break;
+        case 'l':
+            options_parse_line(options, optarg);
             break;
         case 'n':
             free(options->namespace);
@@ -328,6 +381,8 @@ void free_options(struct options* options)
         free(options->namespace);
     if (options->code)
         free(options->code);
+    if (options->filename)
+        free(options->filename);
     free(options);
 }
 
@@ -426,11 +481,16 @@ void nrepl_exec(struct options* options)
 
     nrepl_send(nrepl, "d2:op5:clonee");
 
-    nrepl_send(nrepl, "d2:op%lu:%s2:ns%lu:%s7:session%lu:%s4:code%lu:%se",
+    char extra_options[512] = "";
+    if (options->line != -1)
+        sprintf(extra_options + strlen(extra_options), "4:linei%de", options->line);
+
+    nrepl_send(nrepl, "d2:op%lu:%s2:ns%lu:%s7:session%lu:%s4:code%lu:%s%se",
         strlen(options->op), options->op,
         strlen(options->namespace), options->namespace,
         strlen(nrepl->session), nrepl->session,
-        strlen(options->code), options->code);
+        strlen(options->code), options->code,
+        extra_options);
 
     nrepl_send(nrepl, "d2:op5:close7:session%lu:%se",
         strlen(nrepl->session), nrepl->session);
@@ -447,10 +507,11 @@ rep: Single-shot nREPL client\n\
 Synopsis:\n\
   rep [OPTIONS] [--] [CODE ...]\n\
 Options:\n\
-  -h, --help          Show this help screen.\n\
-  -n, --namespace=NS  Evaluate code in NS (default: user).\n\
-  --op=OP             nREPL operation (default: eval).\n\
-  -p, --port=ADDRESS  TCP port, host:port, @portfile, or @FNAME@RELATIVE.\n\
+  -h, --help                      Show this help screen.\n\
+  -l, --line=[FILE:]LINE[:COLUMN] Set reference file, line, and column for errors.\n\
+  -n, --namespace=NS              Evaluate code in NS (default: user).\n\
+  --op=OP                         nREPL operation (default: eval).\n\
+  -p, --port=ADDRESS              TCP port, host:port, @portfile, or @FNAME@RELATIVE.\n\
 \n");
 }
 
