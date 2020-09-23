@@ -183,6 +183,7 @@ void breader_read(struct breader* reader)
 struct options
 {
     struct sockaddr_in address;
+    char* op;
     char* code;
 };
 
@@ -251,8 +252,13 @@ char* collect_code(int argc, char *argv[], int start)
     return code;
 }
 
+enum {
+    OPT_OP = 127,
+};
+
 const struct option LONG_OPTIONS[] =
 {
+    { "op",   1, NULL, OPT_OP },
     { "port", 1, NULL, 'p' },
     { NULL,   0, NULL, 0 }
 };
@@ -264,6 +270,7 @@ struct options* parse_options(int argc, char* argv[])
     options->address.sin_family = AF_INET;
     options->address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     options->address.sin_port = 0;
+    options->op = strdup("eval");
     options->code = NULL;
 
     int opt;
@@ -273,6 +280,11 @@ struct options* parse_options(int argc, char* argv[])
         {
         case 'p':
             resolve_port_option(options, optarg);
+            break;
+
+        case OPT_OP:
+            free(options->op);
+            options->op = strdup(optarg);
             break;
 
         case '?':
@@ -289,6 +301,7 @@ struct options* parse_options(int argc, char* argv[])
 
 void free_options(struct options* options)
 {
+    free(options->op);
     if (options->code)
         free(options->code);
     free(options);
@@ -339,7 +352,8 @@ void nrepl_exec(struct options* options)
         breader_read(decode);
 
     char* eval_message = (char*)malloc(strlen(options->code) + 128);
-    sprintf(eval_message, "d2:op4:eval7:session%lu:%s4:code%lu:%se",
+    sprintf(eval_message, "d2:op%lu:%s7:session%lu:%s4:code%lu:%se",
+        strlen(options->op), options->op,
         strlen(nrepl_session), nrepl_session,
         strlen(options->code), options->code);
 
