@@ -318,8 +318,6 @@ struct nrepl
     char* session;
 };
 
-struct nrepl* nrepl = NULL;
-
 struct nrepl* make_nrepl(void)
 {
     struct nrepl* nrepl = (struct nrepl*)malloc(sizeof(struct nrepl));
@@ -335,7 +333,7 @@ void free_nrepl(struct nrepl* nrepl)
     free(nrepl);
 }
 
-void handle_message_key(void* cookie, const char* key, const char* bytes, size_t bytelength, int intvalue)
+void handle_message_key(struct nrepl* nrepl, const char* key, const char* bytes, size_t bytelength, int intvalue)
 {
     if (bytes != NULL)
     {
@@ -357,7 +355,7 @@ void handle_message_key(void* cookie, const char* key, const char* bytes, size_t
 
 void nrepl_exec(struct options* options)
 {
-    nrepl = make_nrepl();
+    struct nrepl* nrepl = make_nrepl();
 
     int nrepl_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (nrepl_sock == -1)
@@ -370,7 +368,7 @@ void nrepl_exec(struct options* options)
     if (send(nrepl_sock, CLONE_MESSAGE, strlen(CLONE_MESSAGE), 0) != strlen(CLONE_MESSAGE))
         error("send");
 
-    struct breader *decode = make_breader(nrepl_sock, NULL, handle_message_key);
+    struct breader *decode = make_breader(nrepl_sock, nrepl, (breader_callback_t)handle_message_key);
 
     nrepl->request_done = false;
     while (!nrepl->request_done)
