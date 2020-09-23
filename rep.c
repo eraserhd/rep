@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <stdarg.h>
 
 void fail(const char* message)
 {
@@ -363,10 +364,28 @@ void free_nrepl(struct nrepl* nrepl)
     free(nrepl);
 }
 
-void nrepl_send(struct nrepl* nrepl, const char* message)
+void nrepl_send(struct nrepl* nrepl, const char* format, ...)
 {
-    if (send(nrepl->fd, message, strlen(message), 0) != strlen(message))
+    va_list vargs;
+    size_t length;
+    char *message = NULL;
+
+    va_start(vargs, format);
+    length = vsnprintf(NULL, 0, format, vargs);
+    va_end(vargs);
+
+    message = (char*)malloc(length + 1);
+    va_start(vargs, format);
+    vsnprintf(message, length+1, format, vargs);
+    va_end(vargs);
+
+    if (send(nrepl->fd, message, length, 0) != length)
+    {
+        free(message);
         error("send");
+    }
+
+    free(message);
 }
 
 void nrepl_receive_until_done(struct nrepl* nrepl)
@@ -386,21 +405,14 @@ void nrepl_exec(struct options* options)
     nrepl_send(nrepl, "d2:op5:clonee");
     nrepl_receive_until_done(nrepl);
 
-    char* eval_message = (char*)malloc(strlen(options->code) + 128);
-    sprintf(eval_message, "d2:op%lu:%s7:session%lu:%s4:code%lu:%se",
+    nrepl_send(nrepl, "d2:op%lu:%s7:session%lu:%s4:code%lu:%se",
         strlen(options->op), options->op,
         strlen(nrepl->session), nrepl->session,
         strlen(options->code), options->code);
-    nrepl_send(nrepl, eval_message);
-    free(eval_message);
-    eval_message = NULL;
-
     nrepl_receive_until_done(nrepl);
 
-    char close_message[128];
-    snprintf(close_message, sizeof(close_message), "d2:op5:close7:session%lu:%se",
+    nrepl_send(nrepl, "d2:op5:close7:session%lu:%se",
         strlen(nrepl->session), nrepl->session);
-    nrepl_send(nrepl, close_message);
     nrepl_receive_until_done(nrepl);
 
     free_nrepl(nrepl);
