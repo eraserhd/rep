@@ -296,7 +296,6 @@ void free_options(struct options* options)
 
 /* ------------------------------------------------------------------------ */
 
-int nrepl_sock = -1;
 _Bool nrepl_done = false;
 char *nrepl_session = NULL;
 
@@ -317,7 +316,7 @@ void handle_message_key(void* cookie, const char* key, const char* bytes, size_t
 
 void nrepl_exec(struct options* options)
 {
-    nrepl_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    int nrepl_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (nrepl_sock == -1)
         error("socket");
     if (-1 == connect(nrepl_sock, (struct sockaddr*)&options->address, sizeof(options->address)))
