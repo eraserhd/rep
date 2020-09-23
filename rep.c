@@ -335,14 +335,12 @@ int main(int argc, char *argv[])
     options = parse_options(argc, argv);
 
     int opt;
-    _Bool has_port = false;
     while ((opt = getopt_long(argc, argv, "p:", LONG_OPTIONS, NULL)) != -1)
     {
         switch (opt)
         {
         case 'p':
             resolve_port_option(optarg);
-            has_port = true;
             break;
 
         case '?':
@@ -350,7 +348,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!has_port)
+    if (0 == options->address.sin_port)
         resolve_port_option("@.nrepl-port");
 
     char* code = collect_code(argc, argv, optind);
