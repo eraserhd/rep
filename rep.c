@@ -178,7 +178,31 @@ void breader_read(struct breader* reader)
     }
 }
 
+/* -- options ------------------------------------------------------------- */
+
+struct options
+{
+    struct sockaddr_in address;
+};
+
+struct options* parse_options(int argc, char* argv[])
+{
+    struct options* options = (struct options*)malloc(sizeof(struct options));
+    memset(&options->address, 0, sizeof(options->address));
+    options->address.sin_family = AF_INET;
+    options->address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    options->address.sin_port = 0;
+    return options;
+}
+
+void free_options(struct options* options)
+{
+    free(options);
+}
+
 /* ------------------------------------------------------------------------ */
+
+struct options *options = NULL;
 
 struct sockaddr_in opt_port =
 {
@@ -315,6 +339,8 @@ char* collect_code(int argc, char *argv[], int start)
 
 int main(int argc, char *argv[])
 {
+    options = parse_options(argc, argv);
+
     int opt;
     _Bool has_port = false;
     while ((opt = getopt_long(argc, argv, "p:", LONG_OPTIONS, NULL)) != -1)
@@ -337,5 +363,7 @@ int main(int argc, char *argv[])
     char* code = collect_code(argc, argv, optind);
     nrepl_exec(code);
     free(code);
+
+    free_options(options);
     exit(0);
 }
