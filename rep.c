@@ -183,6 +183,7 @@ void breader_read(struct breader* reader)
 struct options
 {
     struct sockaddr_in address;
+    char* code;
 };
 
 char *read_file(const char* filename, char* buffer, size_t buffer_size)
@@ -263,11 +264,14 @@ struct options* parse_options(int argc, char* argv[])
     options->address.sin_family = AF_INET;
     options->address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     options->address.sin_port = 0;
+    options->code = NULL;
     return options;
 }
 
 void free_options(struct options* options)
 {
+    if (options->code)
+        free(options->code);
     free(options);
 }
 
@@ -350,9 +354,8 @@ int main(int argc, char *argv[])
     if (0 == options->address.sin_port)
         resolve_port_option(options, "@.nrepl-port");
 
-    char* code = collect_code(argc, argv, optind);
-    nrepl_exec(code);
-    free(code);
+    options->code = collect_code(argc, argv, optind);
+    nrepl_exec(options->code);
 
     free_options(options);
     exit(0);
