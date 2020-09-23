@@ -185,6 +185,77 @@ struct options
     struct sockaddr_in address;
 };
 
+char *read_file(const char* filename, char* buffer, size_t buffer_size)
+{
+    FILE *portfile = fopen(filename, "r");
+    if (NULL == portfile)
+        return NULL;
+    if (NULL == fgets(buffer, buffer_size, portfile))
+    {
+        fclose(portfile);
+        return NULL;
+    }
+    fclose(portfile);
+    return buffer;
+}
+
+void resolve_port_option(struct options* options, const char* port)
+{
+    if (*port == '@')
+    {
+        char linebuffer[256];
+        if (!read_file(port + 1, linebuffer, sizeof(linebuffer)))
+            error(port + 1);
+        resolve_port_option(options, linebuffer);
+        return;
+    }
+    if (strchr(port, ':'))
+    {
+        char *host_part = alloca(strlen(port));
+        strcpy(host_part, port);
+        *strchr(host_part, ':') = '\0';
+
+        options->address.sin_addr.s_addr = inet_addr(host_part);
+        if (options->address.sin_addr.s_addr == INADDR_NONE)
+        {
+            struct hostent *ent = gethostbyname(host_part);
+            if (NULL == ent)
+                error(host_part);
+            if (NULL == ent->h_addr)
+            {
+                fprintf(stderr, "%s has no addresses\n", host_part);
+                exit(1);
+            }
+            options->address.sin_addr = *(struct in_addr*)ent->h_addr;
+        }
+
+        port = strchr(port, ':') + 1;
+    }
+    options->address.sin_port = htons(atoi(port));
+}
+
+char* collect_code(int argc, char *argv[], int start)
+{
+    size_t code_size = 0;
+    for (int i = optind; i < argc; ++i)
+        code_size += strlen(argv[i]) + 1;
+    char *code = (char *)malloc(code_size);
+    code[0] = '\0';
+    for (int i = optind; i < argc; ++i)
+    {
+        if (code[0])
+            strcat(code, " ");
+        strcat(code, argv[i]);
+    }
+    return code;
+}
+
+const struct option LONG_OPTIONS[] =
+{
+    { "port", 1, NULL, 'p' },
+    { NULL,   0, NULL, 0 }
+};
+
 struct options* parse_options(int argc, char* argv[])
 {
     struct options* options = (struct options*)malloc(sizeof(struct options));
@@ -258,78 +329,6 @@ void nrepl_exec(const char* code)
     close(nrepl_sock);
 }
 
-
-char *read_file(const char* filename, char* buffer, size_t buffer_size)
-{
-    FILE *portfile = fopen(filename, "r");
-    if (NULL == portfile)
-        return NULL;
-    if (NULL == fgets(buffer, buffer_size, portfile))
-    {
-        fclose(portfile);
-        return NULL;
-    }
-    fclose(portfile);
-    return buffer;
-}
-
-void resolve_port_option(const char* port)
-{
-    if (*port == '@')
-    {
-        char linebuffer[256];
-        if (!read_file(port + 1, linebuffer, sizeof(linebuffer)))
-            error(port + 1);
-        resolve_port_option(linebuffer);
-        return;
-    }
-    if (strchr(port, ':'))
-    {
-        char *host_part = alloca(strlen(port));
-        strcpy(host_part, port);
-        *strchr(host_part, ':') = '\0';
-
-        options->address.sin_addr.s_addr = inet_addr(host_part);
-        if (options->address.sin_addr.s_addr == INADDR_NONE)
-        {
-            struct hostent *ent = gethostbyname(host_part);
-            if (NULL == ent)
-                error(host_part);
-            if (NULL == ent->h_addr)
-            {
-                fprintf(stderr, "%s has no addresses\n", host_part);
-                exit(1);
-            }
-            options->address.sin_addr = *(struct in_addr*)ent->h_addr;
-        }
-
-        port = strchr(port, ':') + 1;
-    }
-    options->address.sin_port = htons(atoi(port));
-}
-
-const struct option LONG_OPTIONS[] =
-{
-    { "port", 1, NULL, 'p' },
-    { NULL,   0, NULL, 0 }
-};
-
-char* collect_code(int argc, char *argv[], int start)
-{
-    size_t code_size = 0;
-    for (int i = optind; i < argc; ++i)
-        code_size += strlen(argv[i]) + 1;
-    char *code = (char *)malloc(code_size);
-    code[0] = '\0';
-    for (int i = optind; i < argc; ++i)
-    {
-        if (code[0])
-            strcat(code, " ");
-        strcat(code, argv[i]);
-    }
-    return code;
-}
-
 int main(int argc, char *argv[])
 {
     options = parse_options(argc, argv);
@@ -340,7 +339,7 @@ int main(int argc, char *argv[])
         switch (opt)
         {
         case 'p':
-            resolve_port_option(optarg);
+            resolve_port_option(options, optarg);
             break;
 
         case '?':
@@ -349,7 +348,7 @@ int main(int argc, char *argv[])
     }
 
     if (0 == options->address.sin_port)
-        resolve_port_option("@.nrepl-port");
+        resolve_port_option(options, "@.nrepl-port");
 
     char* code = collect_code(argc, argv, optind);
     nrepl_exec(code);
