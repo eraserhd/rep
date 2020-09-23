@@ -307,8 +307,13 @@ void handle_message_key(void* cookie, const char* key, const char* bytes, size_t
             nrepl_done = true;
         if (!strcmp(key, "new-session"))
             nrepl_session = strdup(bytes);
-        if (!strcmp(key, "out") || !strcmp(key, "value"))
+        if (!strcmp(key, "out"))
             fwrite(bytes, 1, bytelength, stdout);
+        if (!strcmp(key, "value"))
+        {
+            fwrite(bytes, 1, bytelength, stdout);
+            printf("\n");
+        }
         if (!strcmp(key, "err"))
             fwrite(bytes, 1, bytelength, stderr);
     }
