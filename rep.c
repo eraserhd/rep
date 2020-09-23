@@ -184,6 +184,7 @@ void breader_read(struct breader* reader)
 struct options
 {
     struct sockaddr_in address;
+    char* namespace;
     char* op;
     char* code;
 };
@@ -259,9 +260,10 @@ enum {
 
 const struct option LONG_OPTIONS[] =
 {
-    { "op",   1, NULL, OPT_OP },
-    { "port", 1, NULL, 'p' },
-    { NULL,   0, NULL, 0 }
+    { "namespace", 1, NULL, 'n' },
+    { "op",        1, NULL, OPT_OP },
+    { "port",      1, NULL, 'p' },
+    { NULL,        0, NULL, 0 }
 };
 
 struct options* new_options(void)
@@ -272,6 +274,7 @@ struct options* new_options(void)
     options->address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     options->address.sin_port = 0;
     options->op = strdup("eval");
+    options->namespace = strdup("user");
     options->code = NULL;
     return options;
 }
@@ -280,10 +283,15 @@ struct options* parse_options(int argc, char* argv[])
 {
     struct options* options = new_options();
     int opt;
-    while ((opt = getopt_long(argc, argv, "p:", LONG_OPTIONS, NULL)) != -1)
+    while ((opt = getopt_long(argc, argv, "n:p:", LONG_OPTIONS, NULL)) != -1)
     {
         switch (opt)
         {
+        case 'n':
+            free(options->namespace);
+            options->namespace = strdup(optarg);
+            break;
+
         case 'p':
             resolve_port_option(options, optarg);
             break;
@@ -305,7 +313,10 @@ struct options* parse_options(int argc, char* argv[])
 
 void free_options(struct options* options)
 {
-    free(options->op);
+    if (options->op)
+        free(options->op);
+    if (options->namespace)
+        free(options->namespace);
     if (options->code)
         free(options->code);
     free(options);
@@ -401,8 +412,9 @@ void nrepl_exec(struct options* options)
 
     nrepl_send(nrepl, "d2:op5:clonee");
 
-    nrepl_send(nrepl, "d2:op%lu:%s7:session%lu:%s4:code%lu:%se",
+    nrepl_send(nrepl, "d2:op%lu:%s2:ns%lu:%s7:session%lu:%s4:code%lu:%se",
         strlen(options->op), options->op,
+        strlen(options->namespace), options->namespace,
         strlen(nrepl->session), nrepl->session,
         strlen(options->code), options->code);
 
