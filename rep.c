@@ -296,8 +296,6 @@ void free_options(struct options* options)
 
 /* ------------------------------------------------------------------------ */
 
-struct options *options = NULL;
-
 int nrepl_sock = -1;
 _Bool nrepl_done = false;
 char *nrepl_session = NULL;
@@ -317,7 +315,7 @@ void handle_message_key(void* cookie, const char* key, const char* bytes, size_t
     }
 }
 
-void nrepl_exec(const char* code)
+void nrepl_exec(struct options* options)
 {
     nrepl_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (nrepl_sock == -1)
@@ -336,10 +334,10 @@ void nrepl_exec(const char* code)
     while (!nrepl_done)
         breader_read(decode);
 
-    char* eval_message = (char*)malloc(strlen(code) + 128);
+    char* eval_message = (char*)malloc(strlen(options->code) + 128);
     sprintf(eval_message, "d2:op4:eval7:session%lu:%s4:code%lu:%se",
         strlen(nrepl_session), nrepl_session,
-        strlen(code), code);
+        strlen(options->code), options->code);
 
     if (send(nrepl_sock, eval_message, strlen(eval_message), 0) != strlen(eval_message))
         error("send");
@@ -354,10 +352,8 @@ void nrepl_exec(const char* code)
 
 int main(int argc, char *argv[])
 {
-    options = parse_options(argc, argv);
-
-    nrepl_exec(options->code);
-
+    struct options* options = parse_options(argc, argv);
+    nrepl_exec(options);
     free_options(options);
     exit(0);
 }
