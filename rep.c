@@ -183,7 +183,7 @@ void breader_read(struct breader* reader)
 
 struct options
 {
-    struct sockaddr_in address;
+    char* port;
     char* namespace;
     char* op;
     char* code;
@@ -204,24 +204,28 @@ char *read_file(const char* filename, char* buffer, size_t buffer_size)
     return buffer;
 }
 
-void resolve_port_option(struct options* options, const char* port)
+struct sockaddr_in options_port(struct options* options, const char* port)
 {
     if (*port == '@')
     {
         char linebuffer[256];
         if (!read_file(port + 1, linebuffer, sizeof(linebuffer)))
             error(port + 1);
-        resolve_port_option(options, linebuffer);
-        return;
+        return options_port(options, linebuffer);
     }
+    struct sockaddr_in address = {
+        .sin_family = AF_INET,
+        .sin_addr.s_addr = htonl(INADDR_LOOPBACK),
+        .sin_port = 0,
+    };
     if (strchr(port, ':'))
     {
         char *host_part = alloca(strlen(port));
         strcpy(host_part, port);
         *strchr(host_part, ':') = '\0';
 
-        options->address.sin_addr.s_addr = inet_addr(host_part);
-        if (options->address.sin_addr.s_addr == INADDR_NONE)
+        address.sin_addr.s_addr = inet_addr(host_part);
+        if (address.sin_addr.s_addr == INADDR_NONE)
         {
             struct hostent *ent = gethostbyname(host_part);
             if (NULL == ent)
@@ -231,12 +235,16 @@ void resolve_port_option(struct options* options, const char* port)
                 fprintf(stderr, "%s has no addresses\n", host_part);
                 exit(1);
             }
-            options->address.sin_addr = *(struct in_addr*)ent->h_addr;
+            address.sin_addr = *(struct in_addr*)ent->h_addr;
         }
 
         port = strchr(port, ':') + 1;
     }
-    options->address.sin_port = htons(atoi(port));
+    else
+    {
+        address.sin_port = htons(atoi(port));
+    }
+    return address;
 }
 
 char* collect_code(int argc, char *argv[], int start)
@@ -271,10 +279,7 @@ const struct option LONG_OPTIONS[] =
 struct options* new_options(void)
 {
     struct options* options = (struct options*)malloc(sizeof(struct options));
-    memset(&options->address, 0, sizeof(options->address));
-    options->address.sin_family = AF_INET;
-    options->address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    options->address.sin_port = 0;
+    options->port = strdup("@.nrepl-port");
     options->op = strdup("eval");
     options->namespace = strdup("user");
     options->code = NULL;
@@ -298,7 +303,8 @@ struct options* parse_options(int argc, char* argv[])
             options->namespace = strdup(optarg);
             break;
         case 'p':
-            resolve_port_option(options, optarg);
+            free(options->port);
+            options->port = strdup(optarg);
             break;
         case OPT_OP:
             free(options->op);
@@ -308,14 +314,14 @@ struct options* parse_options(int argc, char* argv[])
             exit(1);
         }
     }
-    if (0 == options->address.sin_port)
-        resolve_port_option(options, "@.nrepl-port");
     options->code = collect_code(argc, argv, optind);
     return options;
 }
 
 void free_options(struct options* options)
 {
+    if (options->port)
+        free(options->port);
     if (options->op)
         free(options->op);
     if (options->namespace)
@@ -414,7 +420,8 @@ void nrepl_exec(struct options* options)
 {
     struct nrepl* nrepl = make_nrepl();
 
-    if (-1 == connect(nrepl->fd, (struct sockaddr*)&options->address, sizeof(options->address)))
+    struct sockaddr_in address = options_port(options, options->port);
+    if (-1 == connect(nrepl->fd, (struct sockaddr*)&address, sizeof(address)))
         error("connect");
 
     nrepl_send(nrepl, "d2:op5:clonee");
