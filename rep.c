@@ -364,35 +364,32 @@ void free_nrepl(struct nrepl* nrepl)
     free(nrepl);
 }
 
-void nrepl_send(struct nrepl* nrepl, const char* format, ...)
-{
-    va_list vargs;
-    size_t length;
-    char *message = NULL;
-
-    va_start(vargs, format);
-    length = vsnprintf(NULL, 0, format, vargs);
-    va_end(vargs);
-
-    message = (char*)malloc(length + 1);
-    va_start(vargs, format);
-    vsnprintf(message, length+1, format, vargs);
-    va_end(vargs);
-
-    if (send(nrepl->fd, message, length, 0) != length)
-    {
-        free(message);
-        error("send");
-    }
-
-    free(message);
-}
-
 void nrepl_receive_until_done(struct nrepl* nrepl)
 {
     nrepl->request_done = false;
     while (!nrepl->request_done)
         breader_read(nrepl->decode);
+}
+
+void nrepl_send(struct nrepl* nrepl, const char* format, ...)
+{
+    va_list vargs;
+
+    va_start(vargs, format);
+    size_t length = vsnprintf(NULL, 0, format, vargs);
+    va_end(vargs);
+
+    char* message = (char*)malloc(length + 1);
+    va_start(vargs, format);
+    vsnprintf(message, length+1, format, vargs);
+    va_end(vargs);
+
+    if (send(nrepl->fd, message, length, 0) != length)
+        error("send");
+
+    free(message);
+
+    nrepl_receive_until_done(nrepl);
 }
 
 void nrepl_exec(struct options* options)
@@ -403,17 +400,14 @@ void nrepl_exec(struct options* options)
         error("connect");
 
     nrepl_send(nrepl, "d2:op5:clonee");
-    nrepl_receive_until_done(nrepl);
 
     nrepl_send(nrepl, "d2:op%lu:%s7:session%lu:%s4:code%lu:%se",
         strlen(options->op), options->op,
         strlen(nrepl->session), nrepl->session,
         strlen(options->code), options->code);
-    nrepl_receive_until_done(nrepl);
 
     nrepl_send(nrepl, "d2:op5:close7:session%lu:%se",
         strlen(nrepl->session), nrepl->session);
-    nrepl_receive_until_done(nrepl);
 
     free_nrepl(nrepl);
 }
