@@ -204,13 +204,6 @@ void free_options(struct options* options)
 
 struct options *options = NULL;
 
-struct sockaddr_in opt_port =
-{
-    .sin_family = AF_INET,
-    .sin_addr = htonl(INADDR_LOOPBACK),
-    .sin_port = 0,
-};
-
 int nrepl_sock = -1;
 _Bool nrepl_done = false;
 char *nrepl_session = NULL;
@@ -235,7 +228,7 @@ void nrepl_exec(const char* code)
     nrepl_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (nrepl_sock == -1)
         error("socket");
-    if (-1 == connect(nrepl_sock, (struct sockaddr*)&opt_port, sizeof(opt_port)))
+    if (-1 == connect(nrepl_sock, (struct sockaddr*)&options->address, sizeof(options->address)))
         error("connect");
 
     const char CLONE_MESSAGE[] = "d2:op5:clonee";
@@ -296,8 +289,8 @@ void resolve_port_option(const char* port)
         strcpy(host_part, port);
         *strchr(host_part, ':') = '\0';
 
-        opt_port.sin_addr.s_addr = inet_addr(host_part);
-        if (opt_port.sin_addr.s_addr == INADDR_NONE)
+        options->address.sin_addr.s_addr = inet_addr(host_part);
+        if (options->address.sin_addr.s_addr == INADDR_NONE)
         {
             struct hostent *ent = gethostbyname(host_part);
             if (NULL == ent)
@@ -307,12 +300,12 @@ void resolve_port_option(const char* port)
                 fprintf(stderr, "%s has no addresses\n", host_part);
                 exit(1);
             }
-            opt_port.sin_addr = *(struct in_addr*)ent->h_addr;
+            options->address.sin_addr = *(struct in_addr*)ent->h_addr;
         }
 
         port = strchr(port, ':') + 1;
     }
-    opt_port.sin_port = htons(atoi(port));
+    options->address.sin_port = htons(atoi(port));
 }
 
 const struct option LONG_OPTIONS[] =
