@@ -395,6 +395,7 @@ struct nrepl
     int fd;
     struct breader *decode;
     _Bool request_done;
+    _Bool exception_occurred;
     char* session;
 };
 
@@ -417,6 +418,8 @@ void handle_message_key(struct nrepl* nrepl, const char* key, const char* bytes,
             fwrite(bytes, 1, bytelength, stdout);
             printf("\n");
         }
+        else if (!strcmp(key, "ex"))
+            nrepl->exception_occurred = true;
         else if (!strcmp(key, "err"))
             fwrite(bytes, 1, bytelength, stderr);
     }
@@ -430,6 +433,7 @@ struct nrepl* make_nrepl(void)
         error("socket");
     nrepl->decode = make_breader(nrepl->fd, nrepl, (breader_callback_t)handle_message_key);
     nrepl->request_done = false;
+    nrepl->exception_occurred = false;
     nrepl->session = NULL;
     return nrepl;
 }
@@ -473,9 +477,9 @@ void nrepl_send(struct nrepl* nrepl, const char* format, ...)
     nrepl_receive_until_done(nrepl);
 }
 
-void nrepl_exec(struct options* options)
+int nrepl_exec(struct nrepl* nrepl, struct options* options)
 {
-    struct nrepl* nrepl = make_nrepl();
+    nrepl->exception_occurred = false;
 
     struct sockaddr_in address = options_address(options, options->port);
     if (-1 == connect(nrepl->fd, (struct sockaddr*)&address, sizeof(address)))
@@ -501,7 +505,9 @@ void nrepl_exec(struct options* options)
     nrepl_send(nrepl, "d2:op5:close7:session%lu:%se",
         strlen(nrepl->session), nrepl->session);
 
-    free_nrepl(nrepl);
+    if (nrepl->exception_occurred)
+        return 1;
+    return 0;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -529,7 +535,9 @@ int main(int argc, char *argv[])
         help();
         exit(0);
     }
-    nrepl_exec(options);
+    struct nrepl* nrepl = make_nrepl();
+    int error_code = nrepl_exec(nrepl, options);
+    free_nrepl(nrepl);
     free_options(options);
-    exit(0);
+    exit(error_code);
 }
