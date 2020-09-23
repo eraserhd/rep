@@ -315,35 +315,10 @@ void free_options(struct options* options)
 struct nrepl
 {
     int fd;
+    struct breader *decode;
     _Bool request_done;
     char* session;
 };
-
-struct nrepl* make_nrepl(void)
-{
-    struct nrepl* nrepl = (struct nrepl*)malloc(sizeof(struct nrepl));
-    nrepl->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (nrepl->fd == -1)
-        error("socket");
-    nrepl->request_done = false;
-    nrepl->session = NULL;
-    return nrepl;
-}
-
-void free_nrepl(struct nrepl* nrepl)
-{
-    if (nrepl->session)
-        free(nrepl->session);
-    if (nrepl->fd >= 0)
-        close(nrepl->fd);
-    free(nrepl);
-}
-
-void nrepl_send(struct nrepl* nrepl, const char* message)
-{
-    if (send(nrepl->fd, message, strlen(message), 0) != strlen(message))
-        error("send");
-}
 
 void handle_message_key(struct nrepl* nrepl, const char* key, const char* bytes, size_t bytelength, int intvalue)
 {
@@ -365,10 +340,38 @@ void handle_message_key(struct nrepl* nrepl, const char* key, const char* bytes,
     }
 }
 
+struct nrepl* make_nrepl(void)
+{
+    struct nrepl* nrepl = (struct nrepl*)malloc(sizeof(struct nrepl));
+    nrepl->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (nrepl->fd == -1)
+        error("socket");
+    nrepl->decode = make_breader(nrepl->fd, nrepl, (breader_callback_t)handle_message_key);
+    nrepl->request_done = false;
+    nrepl->session = NULL;
+    return nrepl;
+}
+
+void free_nrepl(struct nrepl* nrepl)
+{
+    if (nrepl->fd >= 0)
+        close(nrepl->fd);
+    if (nrepl->decode)
+        free_breader(nrepl->decode);
+    if (nrepl->session)
+        free(nrepl->session);
+    free(nrepl);
+}
+
+void nrepl_send(struct nrepl* nrepl, const char* message)
+{
+    if (send(nrepl->fd, message, strlen(message), 0) != strlen(message))
+        error("send");
+}
+
 void nrepl_exec(struct options* options)
 {
     struct nrepl* nrepl = make_nrepl();
-    struct breader *decode = make_breader(nrepl->fd, nrepl, (breader_callback_t)handle_message_key);
 
     if (-1 == connect(nrepl->fd, (struct sockaddr*)&options->address, sizeof(options->address)))
         error("connect");
@@ -377,7 +380,7 @@ void nrepl_exec(struct options* options)
 
     nrepl->request_done = false;
     while (!nrepl->request_done)
-        breader_read(decode);
+        breader_read(nrepl->decode);
 
     char* eval_message = (char*)malloc(strlen(options->code) + 128);
     sprintf(eval_message, "d2:op%lu:%s7:session%lu:%s4:code%lu:%se",
@@ -390,7 +393,7 @@ void nrepl_exec(struct options* options)
 
     nrepl->request_done = false;
     while (!nrepl->request_done)
-        breader_read(decode);
+        breader_read(nrepl->decode);
 
     char close_message[128];
     snprintf(close_message, sizeof(close_message), "d2:op5:close7:session%lu:%se",
@@ -399,9 +402,8 @@ void nrepl_exec(struct options* options)
 
     nrepl->request_done = false;
     while (!nrepl->request_done)
-        breader_read(decode);
+        breader_read(nrepl->decode);
 
-    free_breader(decode);
     free_nrepl(nrepl);
 }
 
