@@ -318,16 +318,31 @@ struct nrepl
     char* session;
 };
 
-struct nrepl nrepl = { 0, 0 };
+struct nrepl* nrepl = NULL;
+
+struct nrepl* make_nrepl(void)
+{
+    struct nrepl* nrepl = (struct nrepl*)malloc(sizeof(struct nrepl));
+    nrepl->request_done = false;
+    nrepl->session = NULL;
+    return nrepl;
+}
+
+void free_nrepl(struct nrepl* nrepl)
+{
+    if (nrepl->session)
+        free(nrepl->session);
+    free(nrepl);
+}
 
 void handle_message_key(void* cookie, const char* key, const char* bytes, size_t bytelength, int intvalue)
 {
     if (bytes != NULL)
     {
         if (!strcmp(key, "status") && !strcmp(bytes, "done"))
-            nrepl.request_done = true;
+            nrepl->request_done = true;
         if (!strcmp(key, "new-session"))
-            nrepl.session = strdup(bytes);
+            nrepl->session = strdup(bytes);
         if (!strcmp(key, "out"))
             fwrite(bytes, 1, bytelength, stdout);
         if (!strcmp(key, "value"))
@@ -342,6 +357,8 @@ void handle_message_key(void* cookie, const char* key, const char* bytes, size_t
 
 void nrepl_exec(struct options* options)
 {
+    nrepl = make_nrepl();
+
     int nrepl_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (nrepl_sock == -1)
         error("socket");
@@ -355,14 +372,14 @@ void nrepl_exec(struct options* options)
 
     struct breader *decode = make_breader(nrepl_sock, NULL, handle_message_key);
 
-    nrepl.request_done = false;
-    while (!nrepl.request_done)
+    nrepl->request_done = false;
+    while (!nrepl->request_done)
         breader_read(decode);
 
     char* eval_message = (char*)malloc(strlen(options->code) + 128);
     sprintf(eval_message, "d2:op%lu:%s7:session%lu:%s4:code%lu:%se",
         strlen(options->op), options->op,
-        strlen(nrepl.session), nrepl.session,
+        strlen(nrepl->session), nrepl->session,
         strlen(options->code), options->code);
 
     if (send(nrepl_sock, eval_message, strlen(eval_message), 0) != strlen(eval_message))
@@ -371,23 +388,25 @@ void nrepl_exec(struct options* options)
     free(eval_message);
     eval_message = NULL;
 
-    nrepl.request_done = false;
-    while (!nrepl.request_done)
+    nrepl->request_done = false;
+    while (!nrepl->request_done)
         breader_read(decode);
 
     char close_message[128];
     snprintf(close_message, sizeof(close_message), "d2:op5:close7:session%lu:%se",
-        strlen(nrepl.session), nrepl.session);
+        strlen(nrepl->session), nrepl->session);
 
     if (send(nrepl_sock, close_message, strlen(close_message), 0) != strlen(close_message))
         error("send");
 
-    nrepl.request_done = false;
-    while (!nrepl.request_done)
+    nrepl->request_done = false;
+    while (!nrepl->request_done)
         breader_read(decode);
 
     free_breader(decode);
     close(nrepl_sock);
+
+    free_nrepl(nrepl);
 }
 
 /* ------------------------------------------------------------------------ */
