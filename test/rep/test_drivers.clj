@@ -6,10 +6,7 @@
     [midje.sweet :refer :all]
     [nrepl.misc :refer [response-for]]
     [nrepl.server]
-    [nrepl.transport :as t]
-    [rep.core])
-  (:import
-    (java.io ByteArrayOutputStream OutputStreamWriter)))
+    [nrepl.transport :as t]))
 
 (defn- rep-args [args server user-dir]
   (->> args
@@ -18,27 +15,6 @@
            (-> arg
              (str/replace "${port}" (str (:port server)))
              (str/replace "${user.dir}" user-dir))))))
-
-(defn rep-fast-driver
-  "A driver which does not expect the native image to be built."
-  [server & args]
-  (let [starting-dir (System/getProperty "user.dir")
-        {:keys [port-file]
-         :or {port-file ".nrepl-port"}}
-        (first (filter map? args))]
-    (try
-      (System/setProperty "user.dir" (str starting-dir "/target"))
-      (spit (str starting-dir "/target/" port-file) (str (:port server)))
-      (let [out (ByteArrayOutputStream.)
-            err (ByteArrayOutputStream.)
-            exit-code (binding [*out* (OutputStreamWriter. out)
-                                *err* (OutputStreamWriter. err)]
-                        (apply rep.core/rep (rep-args args server starting-dir)))]
-        {:out (.toString out)
-         :err (.toString err)
-         :exit exit-code})
-      (finally
-        (System/setProperty "user.dir" starting-dir)))))
 
 (defn rep-native-driver
   "An integration driver which runs the `rep` binary."
@@ -51,11 +27,6 @@
         (first (filter map? args))]
     (spit (str starting-dir "/target/" port-file) (str (:port server)))
     (apply sh rep-bin (concat (rep-args args server starting-dir) [:dir (io/file (str starting-dir "/target"))]))))
-
-(def ^:dynamic *driver*
-  (if (= "native" (System/getenv "REP_TEST_DRIVER"))
-    rep-native-driver
-    rep-fast-driver))
 
 (defn- wrap-rep-test-op [f]
   (fn [{:keys [op transport] :as message}]
@@ -78,7 +49,7 @@
   (let [server (binding [*file* nil]
                  (nrepl.server/start-server :handler handler))]
     (try
-      (apply *driver* server args)
+      (apply rep-native-driver server args)
       (finally
         (nrepl.server/stop-server server)))))
 
