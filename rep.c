@@ -366,7 +366,7 @@ struct options* parse_options(int argc, char* argv[])
             options->op = strdup(optarg);
             break;
         case '?':
-            exit(1);
+            exit(2);
         }
     }
     options->code = collect_code(argc, argv, optind);
