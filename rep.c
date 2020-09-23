@@ -322,7 +322,9 @@ struct nrepl
 struct nrepl* make_nrepl(void)
 {
     struct nrepl* nrepl = (struct nrepl*)malloc(sizeof(struct nrepl));
-    nrepl->fd = -1;
+    nrepl->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (nrepl->fd == -1)
+        error("socket");
     nrepl->request_done = false;
     nrepl->session = NULL;
     return nrepl;
@@ -361,9 +363,6 @@ void nrepl_exec(struct options* options)
 {
     struct nrepl* nrepl = make_nrepl();
 
-    nrepl->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (nrepl->fd == -1)
-        error("socket");
     if (-1 == connect(nrepl->fd, (struct sockaddr*)&options->address, sizeof(options->address)))
         error("connect");
 
