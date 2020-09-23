@@ -369,6 +369,13 @@ void nrepl_send(struct nrepl* nrepl, const char* message)
         error("send");
 }
 
+void nrepl_receive_until_done(struct nrepl* nrepl)
+{
+    nrepl->request_done = false;
+    while (!nrepl->request_done)
+        breader_read(nrepl->decode);
+}
+
 void nrepl_exec(struct options* options)
 {
     struct nrepl* nrepl = make_nrepl();
@@ -377,10 +384,7 @@ void nrepl_exec(struct options* options)
         error("connect");
 
     nrepl_send(nrepl, "d2:op5:clonee");
-
-    nrepl->request_done = false;
-    while (!nrepl->request_done)
-        breader_read(nrepl->decode);
+    nrepl_receive_until_done(nrepl);
 
     char* eval_message = (char*)malloc(strlen(options->code) + 128);
     sprintf(eval_message, "d2:op%lu:%s7:session%lu:%s4:code%lu:%se",
@@ -391,18 +395,13 @@ void nrepl_exec(struct options* options)
     free(eval_message);
     eval_message = NULL;
 
-    nrepl->request_done = false;
-    while (!nrepl->request_done)
-        breader_read(nrepl->decode);
+    nrepl_receive_until_done(nrepl);
 
     char close_message[128];
     snprintf(close_message, sizeof(close_message), "d2:op5:close7:session%lu:%se",
         strlen(nrepl->session), nrepl->session);
     nrepl_send(nrepl, close_message);
-
-    nrepl->request_done = false;
-    while (!nrepl->request_done)
-        breader_read(nrepl->decode);
+    nrepl_receive_until_done(nrepl);
 
     free_nrepl(nrepl);
 }
