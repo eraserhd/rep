@@ -193,15 +193,17 @@ char *nrepl_session = NULL;
 
 void handle_message_key(void* cookie, const char* key, const char* bytes, size_t bytelength, int intvalue)
 {
-    if (!strcmp(key, "status") && bytes != NULL && !strcmp(bytes, "done"))
-        nrepl_done = true;
-    if (!strcmp(key, "new-session") && bytes != NULL)
-        nrepl_session = strdup(bytes);
-
-    if (bytes)
-        printf("%s = %s\n", key, bytes);
-    else
-        printf("%s = %d\n", key, intvalue);
+    if (bytes != NULL)
+    {
+        if (!strcmp(key, "status") && !strcmp(bytes, "done"))
+            nrepl_done = true;
+        if (!strcmp(key, "new-session"))
+            nrepl_session = strdup(bytes);
+        if (!strcmp(key, "out") || !strcmp(key, "value"))
+            fwrite(bytes, 1, bytelength, stdout);
+        if (!strcmp(key, "err"))
+            fwrite(bytes, 1, bytelength, stderr);
+    }
 }
 
 void nrepl_exec(const char* code)
