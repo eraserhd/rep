@@ -191,6 +191,7 @@ struct options
     char* filename;
     int line;
     int column;
+    char* send;
     _Bool help;
 };
 
@@ -269,6 +270,7 @@ char* collect_code(int argc, char *argv[], int start)
 
 enum {
     OPT_OP = 127,
+    OPT_SEND,
 };
 
 
@@ -280,6 +282,7 @@ const struct option LONG_OPTIONS[] =
     { "namespace", 1, NULL, 'n' },
     { "op",        1, NULL, OPT_OP },
     { "port",      1, NULL, 'p' },
+    { "send",      1, NULL, OPT_SEND },
     { NULL,        0, NULL, 0 }
 };
 
@@ -294,6 +297,7 @@ struct options* new_options(void)
     options->line = -1;
     options->column = -1;
     options->filename = NULL;
+    options->send = strdup("");
     return options;
 }
 
@@ -339,6 +343,33 @@ void options_parse_line(struct options* options, const char* line)
         fail("invalid value for --line");
 }
 
+void options_parse_send(struct options* options, const char* send)
+{
+    char* key = NULL;
+    char* type = NULL;
+
+    if (NULL == strchr(send, ','))
+        fail("--send value must be KEY,TYPE,VALUE");
+    key = strdup(send);
+    *strchr(key, ',') = '\0';
+    send = strchr(send, ',') + 1;
+
+    if (NULL == strchr(send, ','))
+        fail("--send value must be KEY,TYPE,VALUE");
+    type = strdup(send);
+    *strchr(type, ',') = '\0';
+    send = strchr(send, ',') + 1;
+
+    options->send = (char*)realloc(options->send, strlen(options->send) + strlen(key) + 16 + strlen(send) + 16);
+    sprintf(options->send + strlen(options->send), "%lu:%s", strlen(key), key);
+    if (!strcmp(type, "string"))
+        sprintf(options->send + strlen(options->send), "%lu:%s", strlen(send), send);
+    else if (!strcmp(type, "integer"))
+        sprintf(options->send + strlen(options->send), "i%de", atoi(send));
+    else
+        fail("--send TYPE must be 'string' or 'integer'");
+}
+
 struct options* parse_options(int argc, char* argv[])
 {
     struct options* options = new_options();
@@ -365,6 +396,9 @@ struct options* parse_options(int argc, char* argv[])
             free(options->op);
             options->op = strdup(optarg);
             break;
+        case OPT_SEND:
+            options_parse_send(options, optarg);
+            break;
         case '?':
             exit(2);
         }
@@ -385,6 +419,8 @@ void free_options(struct options* options)
         free(options->code);
     if (options->filename)
         free(options->filename);
+    if (options->send)
+        free(options->send);
     free(options);
 }
 
@@ -495,11 +531,12 @@ int nrepl_exec(struct nrepl* nrepl, struct options* options)
     if (options->filename)
         sprintf(extra_options + strlen(extra_options), "4:file%lu:%s", strlen(options->filename), options->filename);
 
-    nrepl_send(nrepl, "d2:op%lu:%s2:ns%lu:%s7:session%lu:%s4:code%lu:%s%se",
+    nrepl_send(nrepl, "d2:op%lu:%s2:ns%lu:%s7:session%lu:%s4:code%lu:%s%s%se",
         strlen(options->op), options->op,
         strlen(options->namespace), options->namespace,
         strlen(nrepl->session), nrepl->session,
         strlen(options->code), options->code,
+        options->send,
         extra_options);
 
     nrepl_send(nrepl, "d2:op5:close7:session%lu:%se",
@@ -524,6 +561,7 @@ Options:\n\
   -n, --namespace=NS              Evaluate code in NS (default: user).\n\
   --op=OP                         nREPL operation (default: eval).\n\
   -p, --port=ADDRESS              TCP port, host:port, @portfile, or @FNAME@RELATIVE.\n\
+  --send=KEY,TYPE,VALUE           Send additional KEY of VALUE in request.\n\
 \n");
 }
 
