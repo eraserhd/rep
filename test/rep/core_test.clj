@@ -52,7 +52,7 @@
 
 (facts "about --print"
   (fact "it can print arbitrary keys"
-    (rep "--print=foo-key" "(+ 1 1)") => (prints "2\n"))
+    (rep "--print=ns" "(+ 1 1)") => (prints "user"))
   (fact "it overrides any default formats the first time given"
     (rep "--print=value,1,-%{value}-%n" "(+ 2 3)") => (prints "-5-\n"))
   (fact "it can print to stderr"
