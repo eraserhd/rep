@@ -663,17 +663,6 @@ void handle_message_key(struct nrepl* nrepl, const char* key, const char* bytes,
                 free(nrepl->session);
             nrepl->session = strdup(bytes);
         }
-        else if (!strcmp(key, "out"))
-            fwrite(bytes, 1, bytelength, stdout);
-        else if (!strcmp(key, "value"))
-        {
-            fwrite(bytes, 1, bytelength, stdout);
-            printf("\n");
-        }
-        else if (!strcmp(key, "ex"))
-            nrepl->exception_occurred = true;
-        else if (!strcmp(key, "err"))
-            fwrite(bytes, 1, bytelength, stderr);
     }
 }
 
@@ -706,6 +695,26 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
     while (!done)
     {
         struct bvalue* reply = breader_read(nrepl->decode);
+
+        struct bvalue* out = bvalue_dictionary_get(reply, "out");
+        if (out && BVALUE_BYTESTRING == out->type)
+            fwrite(out->value.bsvalue.data, 1, out->value.bsvalue.size, stdout);
+
+        struct bvalue* value = bvalue_dictionary_get(reply, "value");
+        if (value && BVALUE_BYTESTRING == value->type)
+        {
+            fwrite(value->value.bsvalue.data, 1, value->value.bsvalue.size, stdout);
+            printf("\n");
+        }
+
+        struct bvalue* err = bvalue_dictionary_get(reply, "err");
+        if (err && BVALUE_BYTESTRING == err->type)
+            fwrite(err->value.bsvalue.data, 1, err->value.bsvalue.size, stderr);
+
+        struct bvalue* ex = bvalue_dictionary_get(reply, "ex");
+        if (ex)
+            nrepl->exception_occurred = true;
+
         struct bvalue* status = bvalue_dictionary_get(reply, "status");
         if (bvalue_equals_string(status, "done") || bvalue_list_contains_string(status, "done"))
             done = true;
