@@ -754,6 +754,7 @@ Options:\n\
   -n, --namespace=NS              Evaluate code in NS (default: user).\n\
   --op=OP                         nREPL operation (default: eval).\n\
   -p, --port=ADDRESS              TCP port, host:port, @portfile, or @FNAME@RELATIVE.\n\
+  --print=KEY|KEY,FD,FORMAT       Print FORMAT to FD when KEY is present.\n\
   --send=KEY,TYPE,VALUE           Send additional KEY of VALUE in request.\n\
 \n");
 }
