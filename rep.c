@@ -23,6 +23,98 @@ void error(const char* what)
     exit(1);
 }
 
+/* --- bvalue ------------------------------------------------------------- */
+
+enum bvalue_type {
+    BVALUE_INTEGER,
+    BVALUE_BYTESTRING,
+    BVALUE_LIST,
+    BVALUE_DICTIONARY
+};
+
+struct bvalue
+{
+    enum bvalue_type type;
+    union {
+        int ivalue;
+        struct {
+            size_t size;
+            char data[1];
+        } bsvalue;
+        struct {
+            struct bvalue *item;
+            struct bvalue *tail;
+        } lvalue;
+        struct {
+            struct bvalue *key;
+            struct bvalue *value;
+            struct bvalue *tail;
+        } dvalue;
+    } value;
+};
+
+struct bvalue* make_bvalue_integer(int n)
+{
+    struct bvalue* result = (struct bvalue*)malloc(sizeof(struct bvalue));
+    result->type = BVALUE_INTEGER;
+    result->value.ivalue = n;
+    return result;
+}
+
+struct bvalue* make_bvalue_bytestring(char* bytes, size_t size)
+{
+    struct bvalue* result = (struct bvalue*)malloc(sizeof(struct bvalue) + size);
+    result->type = BVALUE_BYTESTRING;
+    result->value.bsvalue.size = size;
+    memcpy(result->value.bsvalue.data, bytes, size);
+    result->value.bsvalue.data[size] = '\0';
+    return result;
+}
+
+struct bvalue* make_bvalue_list(struct bvalue* item, struct bvalue* tail)
+{
+    struct bvalue* result = (struct bvalue*)malloc(sizeof(struct bvalue));
+    result->type = BVALUE_LIST;
+    result->value.lvalue.item = item;
+    result->value.lvalue.tail = tail;
+    return result;
+}
+
+struct bvalue* make_bvalue_dictionary(struct bvalue* key, struct bvalue* value, struct bvalue* tail)
+{
+    struct bvalue* result = (struct bvalue*)malloc(sizeof(struct bvalue));
+    result->type = BVALUE_DICTIONARY;
+    result->value.dvalue.key = key;
+    result->value.dvalue.value = value;
+    result->value.dvalue.tail = tail;
+    return result;
+}
+
+void free_bvalue(struct bvalue* value)
+{
+    while (value)
+    {
+        struct bvalue* next = NULL;
+        switch (value->type)
+        {
+        case BVALUE_INTEGER:
+        case BVALUE_BYTESTRING:
+            break;
+        case BVALUE_LIST:
+            free_bvalue(value->value.lvalue.item);
+            next = value->value.lvalue.tail;
+            break;
+        case BVALUE_DICTIONARY:
+            free_bvalue(value->value.dvalue.key);
+            free_bvalue(value->value.dvalue.value);
+            next = value->value.dvalue.tail;
+            break;
+        }
+        free(value);
+        value = next;
+    }
+}
+
 /* --- breader ------------------------------------------------------------ */
 
 typedef void (* breader_callback_t) (void* cookie, const char* key, const char* bytevalue, size_t bytelength, int intvalue);
