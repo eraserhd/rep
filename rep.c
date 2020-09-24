@@ -384,11 +384,11 @@ struct print_option
     char* format;
 };
 
-struct print_option* make_print_option(const char* optarg, struct print_option* next)
+struct print_option* make_print_option(const char* optarg)
 {
     struct print_option* print = (struct print_option*)malloc(sizeof(struct print_option));
     memset(print, 0, sizeof(struct print_option));
-    print->next = next;
+    print->next = NULL;
     print->fd = 1;
     if (!strchr(optarg, ','))
     {
@@ -426,18 +426,19 @@ void free_print_options(struct print_option* print)
     }
 }
 
+void append_print_option(struct print_option** options, struct print_option* new)
+{
+    while (*options)
+        options = &(*options)->next;
+    *options = new;
+}
+
 struct print_option* make_default_print_options(void)
 {
-    return make_print_option(
-        "out,1,%{out}",
-        make_print_option(
-            "err,2,%{err}",
-            make_print_option(
-                "value,1,%{value}%n",
-                NULL
-            )
-        )
-    );
+    struct print_option* result = make_print_option("out,1,%{out}");
+    append_print_option(&result, make_print_option("err,2,%{err}"));
+    append_print_option(&result, make_print_option("value,1,%{value}%n"));
+    return result;
 }
 
 /* -- options ------------------------------------------------------------- */
@@ -668,7 +669,7 @@ struct options* parse_options(int argc, char* argv[])
                 options->print = NULL;
                 have_print = true;
             }
-            options->print = make_print_option(optarg, options->print);
+            append_print_option(&options->print, make_print_option(optarg));
             break;
         case OPT_SEND:
             options_parse_send(options, optarg);
