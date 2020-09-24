@@ -490,9 +490,7 @@ struct sockaddr_in options_address(struct options* options, const char* port)
         char *host_part = alloca(strlen(port));
         strcpy(host_part, port);
         *strchr(host_part, ':') = '\0';
-
-        address.sin_addr.s_addr = inet_addr(host_part);
-        if (address.sin_addr.s_addr == INADDR_NONE)
+        if (!inet_aton(host_part, &address.sin_addr))
         {
             struct hostent *ent = gethostbyname(host_part);
             if (NULL == ent)
@@ -502,15 +500,11 @@ struct sockaddr_in options_address(struct options* options, const char* port)
                 fprintf(stderr, "%s has no addresses\n", host_part);
                 exit(1);
             }
-            address.sin_addr = *(struct in_addr*)ent->h_addr;
+            address.sin_addr.s_addr = *(u_long *)ent->h_addr_list[0];
         }
-
         port = strchr(port, ':') + 1;
     }
-    else
-    {
-        address.sin_port = htons(atoi(port));
-    }
+    address.sin_port = htons(atoi(port));
     return address;
 }
 
