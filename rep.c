@@ -184,9 +184,7 @@ void bvalue_append(struct bvalue** value, const char* bytes, size_t length)
     else
     {
         struct bvalue* old = *value;
-        *value = (struct bvalue*)malloc(sizeof(struct bvalue) + new_allocated);
-        (*value)->type = BVALUE_BYTESTRING;
-        (*value)->value.bsvalue.allocated = new_allocated;
+        *value = allocate_bvalue_bytestring(new_allocated);
         (*value)->value.bsvalue.size = new_length;
         memcpy((*value)->value.bsvalue.data, old->value.bsvalue.data, old->value.bsvalue.size);
         memcpy((*value)->value.bsvalue.data + old->value.bsvalue.size, bytes, length);
