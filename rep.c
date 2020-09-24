@@ -180,6 +180,72 @@ void breader_read(struct breader* reader)
     }
 }
 
+/* -- print option -------------------------------------------------------- */
+
+struct print_option
+{
+    struct print_option* next;
+    char* key;
+    int fd;
+    char* format;
+};
+
+struct print_option* make_print_option(const char* optarg, struct print_option* next)
+{
+    struct print_option* print = (struct print_option*)malloc(sizeof(struct print_option));
+    memset(print, 0, sizeof(struct print_option));
+    print->next = next;
+    print->fd = 1;
+    if (!strchr(optarg, ','))
+    {
+        print->key = strdup(optarg);
+        print->format = (char*)malloc(strlen(optarg) + 4);
+        sprintf(print->format, "%%{%s}", optarg);
+    }
+    else
+    {
+        print->key = strdup(optarg);
+        *strchr(print->key, ',') = '\0';
+
+        const char* p = strchr(optarg, ',') + 1;
+        print->fd = atoi(p);
+        p = strchr(optarg, ',');
+        if (NULL == p)
+            fail("--print option is either KEY or KEY,FD,FORMAT");
+        ++p;
+        print->format = strdup(p);
+    }
+    return print;
+}
+
+void free_print_options(struct print_option* print)
+{
+    while (print)
+    {
+        if (print->key)
+            free(print->key);
+        if (print->format)
+            free(print->format);
+        void* p = print;
+        print = print->next;
+        free(p);
+    }
+}
+
+struct print_option* make_default_print_options(void)
+{
+    return make_print_option(
+        "out,1,%{out}",
+        make_print_option(
+            "err,2,%{err}",
+            make_print_option(
+                "value,1,%{value}%n",
+                NULL
+            )
+        )
+    );
+}
+
 /* -- options ------------------------------------------------------------- */
 
 struct options
@@ -193,6 +259,7 @@ struct options
     int column;
     char* send;
     _Bool help;
+    struct print_option* print;
 };
 
 char *read_file(const char* filename, char* buffer, size_t buffer_size)
@@ -270,6 +337,7 @@ char* collect_code(int argc, char *argv[], int start)
 
 enum {
     OPT_OP = 127,
+    OPT_PRINT,
     OPT_SEND,
 };
 
@@ -282,6 +350,7 @@ const struct option LONG_OPTIONS[] =
     { "namespace", 1, NULL, 'n' },
     { "op",        1, NULL, OPT_OP },
     { "port",      1, NULL, 'p' },
+    { "print",     1, NULL, OPT_PRINT },
     { "send",      1, NULL, OPT_SEND },
     { NULL,        0, NULL, 0 }
 };
@@ -298,6 +367,7 @@ struct options* new_options(void)
     options->column = -1;
     options->filename = NULL;
     options->send = strdup("");
+    options->print = make_default_print_options();
     return options;
 }
 
@@ -396,6 +466,9 @@ struct options* parse_options(int argc, char* argv[])
             free(options->op);
             options->op = strdup(optarg);
             break;
+        case OPT_PRINT:
+            options->print = make_print_option(optarg, options->print);
+            break;
         case OPT_SEND:
             options_parse_send(options, optarg);
             break;
@@ -421,6 +494,7 @@ void free_options(struct options* options)
         free(options->filename);
     if (options->send)
         free(options->send);
+    free_print_options(options->print);
     free(options);
 }
 
