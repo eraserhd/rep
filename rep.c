@@ -198,9 +198,6 @@ const char NEWLINE = '\n';
 struct bvalue* bvalue_format(struct bvalue* value, const char* format)
 {
     struct bvalue* result = allocate_bvalue_bytestring(128);
-    char* key_name;
-    const char* end;
-    struct bvalue* embed;
     for (const char* p = format; *p; p++)
     {
         if (*p != '%')
@@ -220,13 +217,13 @@ struct bvalue* bvalue_format(struct bvalue* value, const char* format)
             break;
         case '{':
             p += 2;
-            end = strchr(p, '}');
+            const char* end = strchr(p, '}');
             if (!end)
                 fail("no closing brace in format");
-            key_name = (char*)malloc(end - p + 1);
+            char *key_name = (char*)malloc(end - p + 1);
             memcpy(key_name, p, end - p);
             key_name[end - p] = '\0';
-            embed = bvalue_dictionary_get(value, key_name);
+            struct bvalue* embed = bvalue_dictionary_get(value, key_name);
             free(key_name);
             if (embed && BVALUE_BYTESTRING == embed->type)
                 bvalue_append(&result, embed->value.bsvalue.data, embed->value.bsvalue.size);
