@@ -143,6 +143,18 @@ struct bvalue* bvalue_dictionary_get(struct bvalue* dictionary, const char* key)
     return NULL;
 }
 
+_Bool bvalue_list_contains_string(struct bvalue* list, const char* s)
+{
+    if (!list)
+        return false;
+    if (BVALUE_LIST != list->type)
+        return false;
+    for (; list; list = list->value.lvalue.tail)
+        if (bvalue_equals_string(list->value.lvalue.item, s))
+            return true;
+    return false;
+}
+
 /* --- breader ------------------------------------------------------------ */
 
 typedef void (* breader_callback_t) (void* cookie, const char* key, const char* bytevalue, size_t bytelength, int intvalue);
@@ -695,19 +707,8 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
     {
         struct bvalue* reply = breader_read(nrepl->decode);
         struct bvalue* status = bvalue_dictionary_get(reply, "status");
-        if (bvalue_equals_string(status, "done"))
+        if (bvalue_equals_string(status, "done") || bvalue_list_contains_string(status, "done"))
             done = true;
-        if (status && status->type == BVALUE_LIST)
-        {
-            for (struct bvalue* iterator = status; iterator; iterator = iterator->value.lvalue.tail)
-            {
-                if (bvalue_equals_string(iterator->value.lvalue.item, "done"))
-                {
-                    done = true;
-                    break;
-                }
-            }
-        }
         free_bvalue(reply);
     }
 }
