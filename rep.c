@@ -199,11 +199,7 @@ const char NEWLINE = '\n';
 
 struct bvalue* bvalue_format(struct bvalue* value, const char* format)
 {
-    struct bvalue* result = (struct bvalue*)malloc(sizeof(struct bvalue) + 128);
-    result->type = BVALUE_BYTESTRING;
-    result->value.bsvalue.size = 0;
-    result->value.bsvalue.allocated = 128;
-
+    struct bvalue* result = allocate_bvalue_bytestring(128);
     char* key_name;
     const char* end;
     struct bvalue* embed;
