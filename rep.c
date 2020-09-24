@@ -40,6 +40,7 @@ struct bvalue
         int ivalue;
         struct {
             size_t size;
+            size_t allocated;
             char data[1];
         } bsvalue;
         struct {
@@ -67,6 +68,7 @@ struct bvalue* make_bvalue_bytestring(char* bytes, size_t size)
     struct bvalue* result = (struct bvalue*)malloc(sizeof(struct bvalue) + size);
     result->type = BVALUE_BYTESTRING;
     result->value.bsvalue.size = size;
+    result->value.bsvalue.allocated = size;
     memcpy(result->value.bsvalue.data, bytes, size);
     result->value.bsvalue.data[size] = '\0';
     return result;
@@ -154,6 +156,85 @@ _Bool bvalue_list_contains_string(struct bvalue* list, const char* s)
         if (bvalue_equals_string(list->value.lvalue.item, s))
             return true;
     return false;
+}
+
+void bvalue_append(struct bvalue** value, const char* bytes, size_t length)
+{
+    if (0 == length)
+        return;
+    if (BVALUE_BYTESTRING != (*value)->type)
+        fail("not a bytestring");
+    size_t new_length = (*value)->value.bsvalue.size + length;
+    size_t new_allocated = (*value)->value.bsvalue.allocated;
+    while (new_allocated < new_length)
+        new_allocated <<= 1;
+    if (new_allocated == (*value)->value.bsvalue.allocated)
+    {
+        memcpy((*value)->value.bsvalue.data + (*value)->value.bsvalue.size, bytes, length);
+        (*value)->value.bsvalue.size = new_length;
+    }
+    else
+    {
+        struct bvalue* old = *value;
+        *value = (struct bvalue*)malloc(sizeof(struct bvalue) + new_allocated);
+        (*value)->type = BVALUE_BYTESTRING;
+        (*value)->value.bsvalue.allocated = new_allocated;
+        (*value)->value.bsvalue.size = new_length;
+        memcpy((*value)->value.bsvalue.data, old->value.bsvalue.data, old->value.bsvalue.size);
+        memcpy((*value)->value.bsvalue.data + old->value.bsvalue.size, bytes, length);
+        free_bvalue(old);
+    }
+}
+
+const char PERCENT = '%';
+const char NEWLINE = '\n';
+
+struct bvalue* bvalue_format(struct bvalue* value, const char* format)
+{
+    struct bvalue* result = (struct bvalue*)malloc(sizeof(struct bvalue) + 128);
+    result->type = BVALUE_BYTESTRING;
+    result->value.bsvalue.size = 0;
+    result->value.bsvalue.allocated = 128;
+
+    char* key_name;
+    const char* end;
+    struct bvalue* embed;
+    for (const char* p = format; *p; p++)
+    {
+        if (*p != '%')
+        {
+            bvalue_append(&result, p, 1);
+            continue;
+        }
+        switch (p[1])
+        {
+        case '%':
+            bvalue_append(&result, &PERCENT, 1);
+            p++;
+            break;
+        case 'n':
+            bvalue_append(&result, &NEWLINE, 1);
+            p++;
+            break;
+        case '{':
+            p++;
+            end = strchr(p, '}');
+            if (!end)
+                fail("no closing brace in format");
+            key_name = (char*)malloc(end - p + 1);
+            memcpy(key_name, p, end - p);
+            key_name[end - p] = '\0';
+            embed = bvalue_dictionary_get(value, key_name);
+            free(key_name);
+            if (embed && BVALUE_BYTESTRING == embed->type)
+                bvalue_append(&result, embed->value.bsvalue.data, embed->value.bsvalue.size);
+            p = end + 1;
+            break;
+        default:
+            fail("invalid character in format");
+        }
+    }
+    return result;
 }
 
 /* --- breader ------------------------------------------------------------ */
@@ -663,20 +744,14 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
             nrepl->session = strdup(new_session->value.bsvalue.data);
         }
 
-        struct bvalue* out = bvalue_dictionary_get(reply, "out");
-        if (out && BVALUE_BYTESTRING == out->type)
-            fwrite(out->value.bsvalue.data, 1, out->value.bsvalue.size, stdout);
-
-        struct bvalue* value = bvalue_dictionary_get(reply, "value");
-        if (value && BVALUE_BYTESTRING == value->type)
+        for (struct print_option* print = nrepl->options->print; print; print = print->next)
         {
-            fwrite(value->value.bsvalue.data, 1, value->value.bsvalue.size, stdout);
-            printf("\n");
+            if (NULL == bvalue_dictionary_get(reply, print->key))
+                continue;
+            struct bvalue* s = bvalue_format(reply, print->format);
+            write(print->fd, s->value.bsvalue.data, s->value.bsvalue.size);
+            free_bvalue(s);
         }
-
-        struct bvalue* err = bvalue_dictionary_get(reply, "err");
-        if (err && BVALUE_BYTESTRING == err->type)
-            fwrite(err->value.bsvalue.data, 1, err->value.bsvalue.size, stderr);
 
         struct bvalue* ex = bvalue_dictionary_get(reply, "ex");
         if (ex)
