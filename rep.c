@@ -115,6 +115,26 @@ void free_bvalue(struct bvalue* value)
     }
 }
 
+struct bvalue* bvalue_dictionary_get(struct bvalue* dictionary, const char* key)
+{
+    size_t key_length = strlen(key);
+    for ( ; dictionary; dictionary = dictionary->value.dvalue.tail)
+    {
+        if (BVALUE_DICTIONARY != dictionary->type)
+            continue;
+        if (!dictionary->value.dvalue.key)
+            continue;
+        if (BVALUE_BYTESTRING != dictionary->value.dvalue.key->type)
+            continue;
+        if (key_length != dictionary->value.dvalue.key->value.bsvalue.size)
+            continue;
+        if (memcmp(dictionary->value.dvalue.key->value.bsvalue.data, key, key_length))
+            continue;
+        return dictionary->value.dvalue.value;
+    }
+    return NULL;
+}
+
 /* --- breader ------------------------------------------------------------ */
 
 typedef void (* breader_callback_t) (void* cookie, const char* key, const char* bytevalue, size_t bytelength, int intvalue);
@@ -670,6 +690,7 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
     while (!nrepl->request_done)
     {
         struct bvalue* reply = breader_read(nrepl->decode);
+        struct bvalue* status = bvalue_dictionary_get(reply, "status");
         free_bvalue(reply);
     }
 }
