@@ -35,8 +35,8 @@
     (rep "-n" "rep.core-test" "(str *ns*)") => (prints "\"rep.core-test\"\n")))
 
 (facts "about specifying line numbers"
-  (rep "(throw (Exception.))")                             => (prints #"REPL:1" :to-stderr)
-  (rep "-l" "27" "(throw (Exception.))")                   => (prints #"REPL:27" :to-stderr)
+  (rep "(throw (Exception.))")                             => (prints #"\(:1\)" :to-stderr)
+  (rep "-l" "27" "(throw (Exception.))")                   => (prints #"\(:27\)" :to-stderr)
   (rep "-l" "27:11"         "(do (def foo) (meta #'foo))") => (prints #":line 27")
   (rep "-l" "27:11"         "(do (def foo) (meta #'foo))") => (prints #":column 15")
   (rep "-l" "foo.clj:18"    "(do (def foo) (meta #'foo))") => (prints #":file \"foo.clj\"")
