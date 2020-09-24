@@ -115,6 +115,16 @@ void free_bvalue(struct bvalue* value)
     }
 }
 
+_Bool bvalue_equals_string(struct bvalue* value, const char* s)
+{
+    if (BVALUE_BYTESTRING != value->type)
+        return false;
+    size_t length = strlen(s);
+    if (length != value->value.bsvalue.size)
+        return false;
+    return !memcmp(value->value.bsvalue.data, s, length);
+}
+
 struct bvalue* bvalue_dictionary_get(struct bvalue* dictionary, const char* key)
 {
     size_t key_length = strlen(key);
@@ -124,11 +134,7 @@ struct bvalue* bvalue_dictionary_get(struct bvalue* dictionary, const char* key)
             continue;
         if (!dictionary->value.dvalue.key)
             continue;
-        if (BVALUE_BYTESTRING != dictionary->value.dvalue.key->type)
-            continue;
-        if (key_length != dictionary->value.dvalue.key->value.bsvalue.size)
-            continue;
-        if (memcmp(dictionary->value.dvalue.key->value.bsvalue.data, key, key_length))
+        if (!bvalue_equals_string(dictionary->value.dvalue.key, key))
             continue;
         return dictionary->value.dvalue.value;
     }
@@ -629,7 +635,6 @@ struct nrepl
 {
     int fd;
     struct breader *decode;
-    _Bool request_done;
     _Bool exception_occurred;
     char* session;
 };
@@ -638,9 +643,7 @@ void handle_message_key(struct nrepl* nrepl, const char* key, const char* bytes,
 {
     if (bytes != NULL)
     {
-        if (!strcmp(key, "status") && !strcmp(bytes, "done"))
-            nrepl->request_done = true;
-        else if (!strcmp(key, "new-session"))
+        if (!strcmp(key, "new-session"))
         {
             if (nrepl->session)
                 free(nrepl->session);
@@ -667,7 +670,6 @@ struct nrepl* make_nrepl(void)
     if (nrepl->fd == -1)
         error("socket");
     nrepl->decode = make_breader(nrepl->fd, nrepl, (breader_callback_t)handle_message_key);
-    nrepl->request_done = false;
     nrepl->exception_occurred = false;
     nrepl->session = NULL;
     return nrepl;
@@ -686,11 +688,33 @@ void free_nrepl(struct nrepl* nrepl)
 
 void nrepl_receive_until_done(struct nrepl* nrepl)
 {
-    nrepl->request_done = false;
-    while (!nrepl->request_done)
+    _Bool done = false;
+    while (!done)
     {
         struct bvalue* reply = breader_read(nrepl->decode);
         struct bvalue* status = bvalue_dictionary_get(reply, "status");
+        if (status)
+        {
+            switch (status->type)
+            {
+            case BVALUE_BYTESTRING:
+                if (bvalue_equals_string(status, "done"))
+                    done = true;
+                break;
+            case BVALUE_LIST:
+                for (struct bvalue* iterator = status; iterator; iterator = iterator->value.lvalue.tail)
+                {
+                    if (bvalue_equals_string(iterator->value.lvalue.item, "done"))
+                    {
+                        done = true;
+                        break;
+                    }
+                }
+                break;
+            default:
+                break;
+            }
+        }
         free_bvalue(reply);
     }
 }
