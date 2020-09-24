@@ -209,15 +209,15 @@ struct bvalue* bvalue_format(struct bvalue* value, const char* format)
         switch (p[1])
         {
         case '%':
-            bvalue_append(&result, &PERCENT, 1);
             p++;
+            bvalue_append(&result, &PERCENT, 1);
             break;
         case 'n':
-            bvalue_append(&result, &NEWLINE, 1);
             p++;
+            bvalue_append(&result, &NEWLINE, 1);
             break;
         case '{':
-            p++;
+            p += 2;
             end = strchr(p, '}');
             if (!end)
                 fail("no closing brace in format");
@@ -228,7 +228,7 @@ struct bvalue* bvalue_format(struct bvalue* value, const char* format)
             free(key_name);
             if (embed && BVALUE_BYTESTRING == embed->type)
                 bvalue_append(&result, embed->value.bsvalue.data, embed->value.bsvalue.size);
-            p = end + 1;
+            p = end;
             break;
         default:
             fail("invalid character in format");
@@ -404,7 +404,7 @@ struct print_option* make_print_option(const char* optarg, struct print_option* 
 
         const char* p = strchr(optarg, ',') + 1;
         print->fd = atoi(p);
-        p = strchr(optarg, ',');
+        p = strchr(p, ',');
         if (NULL == p)
             fail("--print option is either KEY or KEY,FD,FORMAT");
         ++p;
