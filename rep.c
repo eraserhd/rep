@@ -641,6 +641,7 @@ struct options* parse_options(int argc, char* argv[])
 {
     struct options* options = new_options();
     int opt;
+    _Bool have_print = false;
     while ((opt = getopt_long(argc, argv, SHORT_OPTIONS, LONG_OPTIONS, NULL)) != -1)
     {
         switch (opt)
@@ -664,6 +665,12 @@ struct options* parse_options(int argc, char* argv[])
             options->op = strdup(optarg);
             break;
         case OPT_PRINT:
+            if (!have_print)
+            {
+                free_print_options(options->print);
+                options->print = NULL;
+                have_print = true;
+            }
             options->print = make_print_option(optarg, options->print);
             break;
         case OPT_SEND:
