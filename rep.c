@@ -129,7 +129,7 @@ struct breader
     breader_callback_t process_message_value;
 };
 
-void breader_read(struct breader* reader);
+struct bvalue* breader_read(struct breader* reader);
 
 struct breader* make_breader(int fd, void* cookie, breader_callback_t process_message_value)
 {
@@ -177,33 +177,46 @@ int bread_peek_char(struct breader* reader)
     return reader->peeked_char;
 }
 
-void bread_dictionary(struct breader* reader)
+struct bvalue* bread_dictionary(struct breader* reader)
 {
+    struct bvalue* result = NULL;
+    struct bvalue** iterator = &result;
+
     bread_next_char(reader);
     while('e' != bread_peek_char(reader))
     {
         reader->want_dictionary_key = true;
-        breader_read(reader);
+        struct bvalue* key = breader_read(reader);
         reader->want_dictionary_key = false;
-        breader_read(reader);
+        struct bvalue* value = breader_read(reader);
         if (reader->current_dictionary_key)
         {
             free(reader->current_dictionary_key);
             reader->current_dictionary_key = NULL;
         }
+        *iterator = make_bvalue_dictionary(key, value, NULL);
+        iterator = &(*iterator)->value.dvalue.tail;
     }
     bread_next_char(reader);
+    return result;
 }
 
-void bread_list(struct breader* reader)
+struct bvalue* bread_list(struct breader* reader)
 {
+    struct bvalue* result = NULL;
+    struct bvalue** iterator = &result;
     bread_next_char(reader);
     while('e' != bread_peek_char(reader))
-        breader_read(reader);
+    {
+        struct bvalue* item = breader_read(reader);
+        *iterator = make_bvalue_list(item, NULL);
+        iterator = &(*iterator)->value.lvalue.tail;
+    }
     bread_next_char(reader);
+    return result;
 }
 
-void bread_integer(struct breader* reader)
+struct bvalue* bread_integer(struct breader* reader)
 {
     int value = 0;
     _Bool negative = false;
@@ -221,9 +234,10 @@ void bread_integer(struct breader* reader)
         value = -value;
     if (reader->current_dictionary_key)
         reader->process_message_value(reader->cookie, reader->current_dictionary_key, NULL, 0, value);
+    return make_bvalue_integer(value);
 }
 
-void bread_bytestring(struct breader* reader)
+struct bvalue* bread_bytestring(struct breader* reader)
 {
     size_t length = 0;
     char *bytes = NULL;
@@ -237,7 +251,8 @@ void bread_bytestring(struct breader* reader)
     for (size_t i = 0; i < length; i++)
         bytes[i] = bread_next_char(reader);
     bytes[length] = '\0';
-    
+
+    struct bvalue* result = make_bvalue_bytestring(bytes, length);
     if (reader->want_dictionary_key)
         reader->current_dictionary_key = bytes;
     else
@@ -246,30 +261,28 @@ void bread_bytestring(struct breader* reader)
             reader->process_message_value(reader->cookie, reader->current_dictionary_key, bytes, length, 0);
         free(bytes);
     }
+    return result;
 }
 
-void breader_read(struct breader* reader)
+struct bvalue* breader_read(struct breader* reader)
 {
     switch (bread_peek_char(reader))
     {
     case 'd':
-        bread_dictionary(reader);
-        break;
+        return bread_dictionary(reader);
     case 'l':
-        bread_list(reader);
-        break;
+        return bread_list(reader);
     case 'i':
-        bread_integer(reader);
-        break;
+        return bread_integer(reader);
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
-        bread_bytestring(reader);
-        break;
+        return bread_bytestring(reader);
     case EOF:
         fail("Unexpected EOF");
     default:
         fail("bad character in nREPL stream");
     }
+    return NULL;
 }
 
 /* -- print option -------------------------------------------------------- */
@@ -655,7 +668,10 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
 {
     nrepl->request_done = false;
     while (!nrepl->request_done)
-        breader_read(nrepl->decode);
+    {
+        struct bvalue* reply = breader_read(nrepl->decode);
+        free_bvalue(reply);
+    }
 }
 
 void nrepl_send(struct nrepl* nrepl, const char* format, ...)
