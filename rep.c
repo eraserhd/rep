@@ -25,7 +25,8 @@ void error(const char* what)
 
 /* --- bvalue ------------------------------------------------------------- */
 
-enum bvalue_type {
+enum bvalue_type
+{
     BVALUE_INTEGER,
     BVALUE_BYTESTRING,
     BVALUE_LIST,
@@ -615,15 +616,17 @@ void free_options(struct options* options)
 
 struct nrepl
 {
+    struct options* options;
     int fd;
     struct breader *decode;
     _Bool exception_occurred;
     char* session;
 };
 
-struct nrepl* make_nrepl(void)
+struct nrepl* make_nrepl(struct options* options)
 {
     struct nrepl* nrepl = (struct nrepl*)malloc(sizeof(struct nrepl));
+    nrepl->options = options;
     nrepl->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (nrepl->fd == -1)
         error("socket");
@@ -635,6 +638,7 @@ struct nrepl* make_nrepl(void)
 
 void free_nrepl(struct nrepl* nrepl)
 {
+    free_options(nrepl->options);
     if (nrepl->fd >= 0)
         close(nrepl->fd);
     if (nrepl->decode)
@@ -706,30 +710,30 @@ void nrepl_send(struct nrepl* nrepl, const char* format, ...)
     nrepl_receive_until_done(nrepl);
 }
 
-int nrepl_exec(struct nrepl* nrepl, struct options* options)
+int nrepl_exec(struct nrepl* nrepl)
 {
     nrepl->exception_occurred = false;
 
-    struct sockaddr_in address = options_address(options, options->port);
+    struct sockaddr_in address = options_address(nrepl->options, nrepl->options->port);
     if (-1 == connect(nrepl->fd, (struct sockaddr*)&address, sizeof(address)))
         error("connect");
 
     nrepl_send(nrepl, "d2:op5:clonee");
 
     char extra_options[512] = "";
-    if (options->line != -1)
-        sprintf(extra_options + strlen(extra_options), "4:linei%de", options->line);
-    if (options->column != -1)
-        sprintf(extra_options + strlen(extra_options), "6:columni%de", options->column);
-    if (options->filename)
-        sprintf(extra_options + strlen(extra_options), "4:file%lu:%s", strlen(options->filename), options->filename);
+    if (nrepl->options->line != -1)
+        sprintf(extra_options + strlen(extra_options), "4:linei%de", nrepl->options->line);
+    if (nrepl->options->column != -1)
+        sprintf(extra_options + strlen(extra_options), "6:columni%de", nrepl->options->column);
+    if (nrepl->options->filename)
+        sprintf(extra_options + strlen(extra_options), "4:file%lu:%s", strlen(nrepl->options->filename), nrepl->options->filename);
 
     nrepl_send(nrepl, "d2:op%lu:%s2:ns%lu:%s7:session%lu:%s4:code%lu:%s%s%se",
-        strlen(options->op), options->op,
-        strlen(options->namespace), options->namespace,
+        strlen(nrepl->options->op), nrepl->options->op,
+        strlen(nrepl->options->namespace), nrepl->options->namespace,
         strlen(nrepl->session), nrepl->session,
-        strlen(options->code), options->code,
-        options->send,
+        strlen(nrepl->options->code), nrepl->options->code,
+        nrepl->options->send,
         extra_options);
 
     nrepl_send(nrepl, "d2:op5:close7:session%lu:%se",
@@ -767,9 +771,8 @@ int main(int argc, char *argv[])
         help();
         exit(0);
     }
-    struct nrepl* nrepl = make_nrepl();
-    int error_code = nrepl_exec(nrepl, options);
+    struct nrepl* nrepl = make_nrepl(options);
+    int error_code = nrepl_exec(nrepl);
     free_nrepl(nrepl);
-    free_options(options);
     exit(error_code);
 }
