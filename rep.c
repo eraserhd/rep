@@ -63,12 +63,20 @@ struct bvalue* make_bvalue_integer(int n)
     return result;
 }
 
+struct bvalue* allocate_bvalue_bytestring(size_t allocated)
+{
+    struct bvalue* result = (struct bvalue*)malloc(sizeof(struct bvalue) + allocated);
+    result->type = BVALUE_BYTESTRING;
+    result->value.bsvalue.size = 0;
+    result->value.bsvalue.allocated = allocated;
+    result->value.bsvalue.data[0] = '\0';
+    return result;
+}
+
 struct bvalue* make_bvalue_bytestring(char* bytes, size_t size)
 {
-    struct bvalue* result = (struct bvalue*)malloc(sizeof(struct bvalue) + size);
-    result->type = BVALUE_BYTESTRING;
+    struct bvalue* result = allocate_bvalue_bytestring(size);
     result->value.bsvalue.size = size;
-    result->value.bsvalue.allocated = size;
     memcpy(result->value.bsvalue.data, bytes, size);
     result->value.bsvalue.data[size] = '\0';
     return result;
