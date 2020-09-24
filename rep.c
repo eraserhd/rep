@@ -157,39 +157,24 @@ _Bool bvalue_list_contains_string(struct bvalue* list, const char* s)
 
 /* --- breader ------------------------------------------------------------ */
 
-typedef void (* breader_callback_t) (void* cookie, const char* key, const char* bytevalue, size_t bytelength, int intvalue);
-
 struct breader
 {
     int fd;
     int peeked_char;
-    _Bool want_dictionary_key;
-    char* current_dictionary_key;
-    void* cookie;
-    breader_callback_t process_message_value;
 };
 
 struct bvalue* breader_read(struct breader* reader);
 
-struct breader* make_breader(int fd, void* cookie, breader_callback_t process_message_value)
+struct breader* make_breader(int fd)
 {
     struct breader* reader = (struct breader*)malloc(sizeof(struct breader));
     reader->fd = fd;
     reader->peeked_char = EOF;
-    reader->want_dictionary_key = false;
-    reader->current_dictionary_key = NULL;
-    reader->cookie = cookie;
-    reader->process_message_value = process_message_value;
     return reader;
 }
 
 void free_breader(struct breader* reader)
 {
-    if (reader->current_dictionary_key)
-    {
-        free(reader->current_dictionary_key);
-        reader->current_dictionary_key = NULL;
-    }
     free(reader);
 }
 
@@ -225,15 +210,8 @@ struct bvalue* bread_dictionary(struct breader* reader)
     bread_next_char(reader);
     while('e' != bread_peek_char(reader))
     {
-        reader->want_dictionary_key = true;
         struct bvalue* key = breader_read(reader);
-        reader->want_dictionary_key = false;
         struct bvalue* value = breader_read(reader);
-        if (reader->current_dictionary_key)
-        {
-            free(reader->current_dictionary_key);
-            reader->current_dictionary_key = NULL;
-        }
         *iterator = make_bvalue_dictionary(key, value, NULL);
         iterator = &(*iterator)->value.dvalue.tail;
     }
@@ -272,8 +250,6 @@ struct bvalue* bread_integer(struct breader* reader)
     bread_next_char(reader);
     if (negative)
         value = -value;
-    if (reader->current_dictionary_key)
-        reader->process_message_value(reader->cookie, reader->current_dictionary_key, NULL, 0, value);
     return make_bvalue_integer(value);
 }
 
@@ -291,16 +267,8 @@ struct bvalue* bread_bytestring(struct breader* reader)
     for (size_t i = 0; i < length; i++)
         bytes[i] = bread_next_char(reader);
     bytes[length] = '\0';
-
     struct bvalue* result = make_bvalue_bytestring(bytes, length);
-    if (reader->want_dictionary_key)
-        reader->current_dictionary_key = bytes;
-    else
-    {
-        if (reader->current_dictionary_key)
-            reader->process_message_value(reader->cookie, reader->current_dictionary_key, bytes, length, 0);
-        free(bytes);
-    }
+    free(bytes);
     return result;
 }
 
@@ -653,17 +621,13 @@ struct nrepl
     char* session;
 };
 
-void handle_message_key(struct nrepl* nrepl, const char* key, const char* bytes, size_t bytelength, int intvalue)
-{
-}
-
 struct nrepl* make_nrepl(void)
 {
     struct nrepl* nrepl = (struct nrepl*)malloc(sizeof(struct nrepl));
     nrepl->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (nrepl->fd == -1)
         error("socket");
-    nrepl->decode = make_breader(nrepl->fd, nrepl, (breader_callback_t)handle_message_key);
+    nrepl->decode = make_breader(nrepl->fd);
     nrepl->exception_occurred = false;
     nrepl->session = NULL;
     return nrepl;
