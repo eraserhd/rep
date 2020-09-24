@@ -117,6 +117,8 @@ void free_bvalue(struct bvalue* value)
 
 _Bool bvalue_equals_string(struct bvalue* value, const char* s)
 {
+    if (!value)
+        return false;
     if (BVALUE_BYTESTRING != value->type)
         return false;
     size_t length = strlen(s);
@@ -693,26 +695,17 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
     {
         struct bvalue* reply = breader_read(nrepl->decode);
         struct bvalue* status = bvalue_dictionary_get(reply, "status");
-        if (status)
+        if (bvalue_equals_string(status, "done"))
+            done = true;
+        if (status && status->type == BVALUE_LIST)
         {
-            switch (status->type)
+            for (struct bvalue* iterator = status; iterator; iterator = iterator->value.lvalue.tail)
             {
-            case BVALUE_BYTESTRING:
-                if (bvalue_equals_string(status, "done"))
-                    done = true;
-                break;
-            case BVALUE_LIST:
-                for (struct bvalue* iterator = status; iterator; iterator = iterator->value.lvalue.tail)
+                if (bvalue_equals_string(iterator->value.lvalue.item, "done"))
                 {
-                    if (bvalue_equals_string(iterator->value.lvalue.item, "done"))
-                    {
-                        done = true;
-                        break;
-                    }
+                    done = true;
+                    break;
                 }
-                break;
-            default:
-                break;
             }
         }
         free_bvalue(reply);
