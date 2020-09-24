@@ -655,15 +655,6 @@ struct nrepl
 
 void handle_message_key(struct nrepl* nrepl, const char* key, const char* bytes, size_t bytelength, int intvalue)
 {
-    if (bytes != NULL)
-    {
-        if (!strcmp(key, "new-session"))
-        {
-            if (nrepl->session)
-                free(nrepl->session);
-            nrepl->session = strdup(bytes);
-        }
-    }
 }
 
 struct nrepl* make_nrepl(void)
@@ -695,6 +686,14 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
     while (!done)
     {
         struct bvalue* reply = breader_read(nrepl->decode);
+
+        struct bvalue* new_session = bvalue_dictionary_get(reply, "new-session");
+        if (new_session && BVALUE_BYTESTRING == new_session->type)
+        {
+            if (nrepl->session)
+                free(nrepl->session);
+            nrepl->session = strdup(new_session->value.bsvalue.data);
+        }
 
         struct bvalue* out = bvalue_dictionary_get(reply, "out");
         if (out && BVALUE_BYTESTRING == out->type)
