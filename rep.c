@@ -6,10 +6,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdarg.h>
+#include <unistd.h>
+#include <libgen.h>
+
+#ifndef PATH_MAX
+#define PATH_MAX 256
+#endif
 
 void fail(const char* message)
 {
@@ -481,10 +488,63 @@ struct sockaddr_in options_address_from_file(struct options* options, const char
     return options_address(options, linebuffer);
 }
 
+struct sockaddr_in options_address_from_relative_file(struct options* options, const char* directory_in, const char* filename)
+{
+    char *directory = strdup(directory_in);
+    for (;;)
+    {
+        struct stat statb;
+        char* path_to_check = (char*)malloc(strlen(directory) + strlen(filename) + 2);
+        sprintf(path_to_check, "%s/%s", directory, filename);
+        if (0 == stat(path_to_check, &statb))
+        {
+            struct sockaddr_in result = options_address_from_file(options, path_to_check);
+            free(path_to_check);
+            free(directory);
+            return result;
+        }
+        free(path_to_check);
+
+        char* old_directory = strdup(directory);
+        char* parent_directory = dirname(directory);
+        if (!strcmp(old_directory, parent_directory))
+        {
+            char error_message[PATH_MAX + 128];
+            sprintf(error_message, "rep: No ancestor of %s contains %s", directory_in, filename);
+            fail(error_message);
+        }
+        free(old_directory);
+        char* new_directory = strdup(parent_directory);
+        free(directory);
+        directory = new_directory;
+    }
+}
+
 struct sockaddr_in options_address(struct options* options, const char* port)
 {
     if (*port == '@')
-        return options_address_from_file(options, port+1);
+    {
+        const char* relative_directory = strchr(port + 1, '@');
+        if (!relative_directory)
+            return options_address_from_file(options, port + 1);
+        ++relative_directory;
+
+        char* absolute_directory = (char*)alloca(strlen(relative_directory) + PATH_MAX + 2);
+        if (*relative_directory == '/')
+            strcpy(absolute_directory, relative_directory);
+        else
+        {
+            getcwd(absolute_directory, PATH_MAX);
+            strcat(absolute_directory, "/");
+            strcat(absolute_directory, relative_directory);
+        }
+
+        char* filename = (char*)alloca(strlen(port) + 1);
+        strcpy(filename, port + 1);
+        *strchr(filename, '@') = '\0';
+
+        return options_address_from_relative_file(options, absolute_directory, filename);
+    }
     struct sockaddr_in address =
     {
         .sin_family = AF_INET,
