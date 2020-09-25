@@ -520,6 +520,17 @@ struct sockaddr_in options_address_from_relative_file(struct options* options, c
     }
 }
 
+char* make_path_absolute(const char* path)
+{
+    if (*path == '/')
+        return strdup(path);
+    char* absolute_directory = (char*)malloc(strlen(path) + PATH_MAX + 2);
+    getcwd(absolute_directory, PATH_MAX);
+    strcat(absolute_directory, "/");
+    strcat(absolute_directory, path);
+    return absolute_directory;
+}
+
 struct sockaddr_in options_address(struct options* options, const char* port)
 {
     if (*port == '@')
@@ -529,21 +540,16 @@ struct sockaddr_in options_address(struct options* options, const char* port)
             return options_address_from_file(options, port + 1);
         ++relative_directory;
 
-        char* absolute_directory = (char*)alloca(strlen(relative_directory) + PATH_MAX + 2);
-        if (*relative_directory == '/')
-            strcpy(absolute_directory, relative_directory);
-        else
-        {
-            getcwd(absolute_directory, PATH_MAX);
-            strcat(absolute_directory, "/");
-            strcat(absolute_directory, relative_directory);
-        }
+        char* absolute_directory = make_path_absolute(relative_directory);
 
         char* filename = (char*)alloca(strlen(port) + 1);
         strcpy(filename, port + 1);
         *strchr(filename, '@') = '\0';
 
-        return options_address_from_relative_file(options, absolute_directory, filename);
+        struct sockaddr_in result = options_address_from_relative_file(options, absolute_directory, filename);
+
+        free(absolute_directory);
+        return result;
     }
     struct sockaddr_in address =
     {
