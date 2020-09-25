@@ -480,7 +480,8 @@ struct sockaddr_in options_address(struct options* options, const char* port)
             error(port + 1);
         return options_address(options, linebuffer);
     }
-    struct sockaddr_in address = {
+    struct sockaddr_in address =
+    {
         .sin_family = AF_INET,
         .sin_addr.s_addr = htonl(INADDR_LOOPBACK),
         .sin_port = 0,
