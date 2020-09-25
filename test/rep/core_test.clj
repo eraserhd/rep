@@ -65,4 +65,4 @@
   (rep "--op=rep-test-op" "--send=bar,integer,42")  => (prints "bar=42;\"hello\"\n"))
 
 (facts "about the examples in the documentation"
-  (rep "--op=ls-sessions" "--print=sessions") => (prints #"^\[\""))
+  (rep "--op=ls-sessions" "--print=sessions,1,%{sessions,session=%.%n;}") => (prints #"^session=[a-fA-F0-9]{6}"))

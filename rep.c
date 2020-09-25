@@ -217,44 +217,70 @@ void bvalue_append_string(struct bvalue** value, const char* bytes, size_t lengt
 const char PERCENT = '%';
 const char NEWLINE = '\n';
 
-struct bvalue* bvalue_format(struct bvalue* value, const char* format)
+void bvalue_append_format(struct bvalue** targetp, struct bvalue* value, const char* format)
 {
-    struct bvalue* result = allocate_bvalue_bytestring(128);
     for (const char* p = format; *p; p++)
     {
         if (*p != '%')
         {
-            bvalue_append_string(&result, p, 1);
+            bvalue_append_string(targetp, p, 1);
             continue;
         }
         switch (p[1])
         {
         case '%':
             p++;
-            bvalue_append_string(&result, &PERCENT, 1);
+            bvalue_append_string(targetp, &PERCENT, 1);
             break;
         case 'n':
             p++;
-            bvalue_append_string(&result, &NEWLINE, 1);
+            bvalue_append_string(targetp, &NEWLINE, 1);
+            break;
+        case '.':
+            p++;
+            if (value && BVALUE_BYTESTRING == value->type)
+                bvalue_append_string(targetp, value->value.bsvalue.data, value->value.bsvalue.size);
             break;
         case '{':
             p += 2;
             const char* end = strchr(p, '}');
             if (!end)
                 fail("no closing brace in format");
-            char *key_name = strdup_up_to(p, '}');
+            char *key_name = NULL;
+            char *element_pattern = NULL;
+            if (strchr(p, ',') && strchr(p, ',') < end)
+            {
+                key_name = strdup_up_to(p, ',');
+                element_pattern = strdup_up_to(strchr(p, ',') + 1, '}');
+            }
+            else
+            {
+                key_name = strdup_up_to(p, '}');
+                element_pattern = strdup("%.%n");
+            }
             struct bvalue* embed = bvalue_dictionary_get(value, key_name);
             free(key_name);
             if (embed && BVALUE_BYTESTRING == embed->type)
-                bvalue_append_string(&result, embed->value.bsvalue.data, embed->value.bsvalue.size);
+                bvalue_append_string(targetp, embed->value.bsvalue.data, embed->value.bsvalue.size);
+            if (embed && BVALUE_LIST == embed->type)
+                for (struct bvalue* i = embed; i; i = i->value.lvalue.tail)
+                    bvalue_append_format(targetp, i->value.lvalue.item, element_pattern);
+            free(element_pattern);
             p = end;
             break;
         default:
             fail("invalid character in format");
         }
     }
+}
+
+struct bvalue* bvalue_format(struct bvalue* value, const char* format)
+{
+    struct bvalue* result = allocate_bvalue_bytestring(128);
+    bvalue_append_format(&result, value, format);
     return result;
 }
+
 
 /* --- breader ------------------------------------------------------------ */
 
