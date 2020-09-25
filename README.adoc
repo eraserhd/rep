@@ -88,16 +88,6 @@ $ make install
 
 `rep` must be in the path for the plugin to work.
 
-Graal/Bytecode Issues
----------------------
-
-At the moment, Graal doesn't deal well with the way Clojure generates bytecode
-from its 'locking' macro, so to build bytecode that Graal can handle, we need
-to apply https://dev.clojure.org/jira/secure/attachment/18767/clj-1472-3.patch[this patch].
-This issue is being tracked
-https://dev.clojure.org/jira/browse/CLJ-1472[here] and
-https://github.com/oracle/graal/issues/861[here].
-
 License
 -------
 
