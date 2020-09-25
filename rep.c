@@ -533,13 +533,11 @@ char* make_path_absolute(const char* path)
 
 struct sockaddr_in options_address(struct options* options, const char* port)
 {
-    if (*port == '@')
+    if (*port == '@' && !strchr(port + 1, '@'))
+        return options_address_from_file(options, port + 1);
+    else if (*port == '@')
     {
-        const char* relative_directory = strchr(port + 1, '@');
-        if (!relative_directory)
-            return options_address_from_file(options, port + 1);
-        ++relative_directory;
-
+        const char* relative_directory = strchr(port + 1, '@') + 1;
         char* absolute_directory = make_path_absolute(relative_directory);
 
         char* filename = (char*)alloca(strlen(port) + 1);
