@@ -457,6 +457,8 @@ struct options
     struct print_option* print;
 };
 
+struct sockaddr_in options_address(struct options* options, const char* port);
+
 char *read_file(const char* filename, char* buffer, size_t buffer_size)
 {
     FILE *portfile = fopen(filename, "r");
@@ -471,15 +473,18 @@ char *read_file(const char* filename, char* buffer, size_t buffer_size)
     return buffer;
 }
 
+struct sockaddr_in options_address_from_file(struct options* options, const char* filename)
+{
+    char linebuffer[256];
+    if (!read_file(filename, linebuffer, sizeof(linebuffer)))
+        error(filename);
+    return options_address(options, linebuffer);
+}
+
 struct sockaddr_in options_address(struct options* options, const char* port)
 {
     if (*port == '@')
-    {
-        char linebuffer[256];
-        if (!read_file(port + 1, linebuffer, sizeof(linebuffer)))
-            error(port + 1);
-        return options_address(options, linebuffer);
-    }
+        return options_address_from_file(options, port+1);
     struct sockaddr_in address =
     {
         .sin_family = AF_INET,
