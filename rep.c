@@ -21,13 +21,19 @@
 void fail(const char* message)
 {
     fprintf(stderr, "%s\n", message);
-    exit(1);
+    exit(255);
+}
+
+void options_fail(const char* message)
+{
+    fprintf(stderr, "%s\n", message);
+    exit(2);
 }
 
 void error(const char* what)
 {
     perror(what);
-    exit(1);
+    exit(255);
 }
 
 char* strdup_up_to(const char* input, char ch)
@@ -419,7 +425,7 @@ struct print_option* make_print_option(const char* optarg)
         print->fd = atoi(p);
         p = strchr(p, ',');
         if (NULL == p)
-            fail("--print option is either KEY or KEY,FD,FORMAT");
+            options_fail("--print option is either KEY or KEY,FD,FORMAT");
         ++p;
         print->format = strdup(p);
     }
@@ -569,7 +575,7 @@ struct sockaddr_in options_address(struct options* options, const char* port)
             if (NULL == ent->h_addr)
             {
                 fprintf(stderr, "%s has no addresses\n", host_part);
-                exit(1);
+                exit(255);
             }
             address.sin_addr.s_addr = *(u_long *)ent->h_addr_list[0];
         }
@@ -669,7 +675,7 @@ void options_parse_line(struct options* options, const char* line)
         options->line = 1;
     }
     else
-        fail("invalid value for --line");
+        options_fail("invalid value for --line");
 }
 
 void options_parse_send(struct options* options, const char* send)
@@ -678,12 +684,12 @@ void options_parse_send(struct options* options, const char* send)
     char* type = NULL;
 
     if (NULL == strchr(send, ','))
-        fail("--send value must be KEY,TYPE,VALUE");
+        options_fail("--send value must be KEY,TYPE,VALUE");
     key = strdup_up_to(send, ',');
     send = strchr(send, ',') + 1;
 
     if (NULL == strchr(send, ','))
-        fail("--send value must be KEY,TYPE,VALUE");
+        options_fail("--send value must be KEY,TYPE,VALUE");
     type = strdup_up_to(send, ',');
     send = strchr(send, ',') + 1;
 
@@ -694,7 +700,7 @@ void options_parse_send(struct options* options, const char* send)
     else if (!strcmp(type, "integer"))
         sprintf(options->send + strlen(options->send), "i%de", atoi(send));
     else
-        fail("--send TYPE must be 'string' or 'integer'");
+        options_fail("--send TYPE must be 'string' or 'integer'");
 }
 
 struct options* parse_options(int argc, char* argv[])
