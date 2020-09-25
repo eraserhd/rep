@@ -4,6 +4,8 @@ Change Log
 https://github.com/eraserhd/rep/compare/v0.1.2...HEAD[Unreleased]
 ----------------------------------------------------------------
 
+* Rewrite in C for portability.
+
 === Added
 
 * `--port` accept `@FNAME@RELATIVE` to find a port file in a parent.
