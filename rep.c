@@ -539,14 +539,11 @@ struct sockaddr_in options_address(struct options* options, const char* port)
     {
         const char* relative_directory = strchr(port + 1, '@') + 1;
         char* absolute_directory = make_path_absolute(relative_directory);
-
-        char* filename = (char*)alloca(strlen(port) + 1);
-        strcpy(filename, port + 1);
+        char* filename = strdup(port + 1);
         *strchr(filename, '@') = '\0';
-
         struct sockaddr_in result = options_address_from_relative_file(options, absolute_directory, filename);
-
         free(absolute_directory);
+        free(filename);
         return result;
     }
     struct sockaddr_in address =
