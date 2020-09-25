@@ -30,6 +30,15 @@ void error(const char* what)
     exit(1);
 }
 
+char* strdup_up_to(const char* input, char ch)
+{
+    char* result = strdup(input);
+    char* p = strchr(result, ch);
+    if (p)
+        *p = '\0';
+    return result;
+}
+
 /* --- bvalue ------------------------------------------------------------- */
 
 enum bvalue_type
@@ -405,9 +414,7 @@ struct print_option* make_print_option(const char* optarg)
     }
     else
     {
-        print->key = strdup(optarg);
-        *strchr(print->key, ',') = '\0';
-
+        print->key = strdup_up_to(optarg, ',');
         const char* p = strchr(optarg, ',') + 1;
         print->fd = atoi(p);
         p = strchr(p, ',');
@@ -539,8 +546,7 @@ struct sockaddr_in options_address(struct options* options, const char* port)
     {
         const char* relative_directory = strchr(port + 1, '@') + 1;
         char* absolute_directory = make_path_absolute(relative_directory);
-        char* filename = strdup(port + 1);
-        *strchr(filename, '@') = '\0';
+        char* filename = strdup_up_to(port + 1, '@');
         struct sockaddr_in result = options_address_from_relative_file(options, absolute_directory, filename);
         free(absolute_directory);
         free(filename);
@@ -554,9 +560,7 @@ struct sockaddr_in options_address(struct options* options, const char* port)
     };
     if (strchr(port, ':'))
     {
-        char *host_part = alloca(strlen(port));
-        strcpy(host_part, port);
-        *strchr(host_part, ':') = '\0';
+        char *host_part = strdup_up_to(port, ':');
         if (!inet_aton(host_part, &address.sin_addr))
         {
             struct hostent *ent = gethostbyname(host_part);
@@ -569,6 +573,7 @@ struct sockaddr_in options_address(struct options* options, const char* port)
             }
             address.sin_addr.s_addr = *(u_long *)ent->h_addr_list[0];
         }
+        free(host_part);
         port = strchr(port, ':') + 1;
     }
     address.sin_port = htons(atoi(port));
@@ -640,8 +645,7 @@ void options_parse_line(struct options* options, const char* line)
     }
     if (2 == colons)
     {
-        options->filename = strdup(line);
-        *strchr(options->filename, ':') = '\0';
+        options->filename = strdup_up_to(line, ':');
         const char* p = strchr(line, ':') + 1;
         options->line = atoi(p);
         p = strchr(p, ':') + 1;
@@ -654,8 +658,7 @@ void options_parse_line(struct options* options, const char* line)
     }
     else if (1 == colons)
     {
-        options->filename = strdup(line);
-        *strchr(options->filename, ':') = '\0';
+        options->filename = strdup_up_to(line, ':');
         options->line = atoi(strchr(line, ':') + 1);
     }
     else if (0 == colons && 0 == nondigits)
@@ -676,14 +679,12 @@ void options_parse_send(struct options* options, const char* send)
 
     if (NULL == strchr(send, ','))
         fail("--send value must be KEY,TYPE,VALUE");
-    key = strdup(send);
-    *strchr(key, ',') = '\0';
+    key = strdup_up_to(send, ',');
     send = strchr(send, ',') + 1;
 
     if (NULL == strchr(send, ','))
         fail("--send value must be KEY,TYPE,VALUE");
-    type = strdup(send);
-    *strchr(type, ',') = '\0';
+    type = strdup_up_to(send, ',');
     send = strchr(send, ',') + 1;
 
     options->send = (char*)realloc(options->send, strlen(options->send) + strlen(key) + 16 + strlen(send) + 16);
