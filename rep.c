@@ -188,7 +188,7 @@ _Bool bvalue_list_contains_string(struct bvalue* list, const char* s)
     return false;
 }
 
-void bvalue_append(struct bvalue** value, const char* bytes, size_t length)
+void bvalue_append_string(struct bvalue** value, const char* bytes, size_t length)
 {
     if (0 == length)
         return;
@@ -224,18 +224,18 @@ struct bvalue* bvalue_format(struct bvalue* value, const char* format)
     {
         if (*p != '%')
         {
-            bvalue_append(&result, p, 1);
+            bvalue_append_string(&result, p, 1);
             continue;
         }
         switch (p[1])
         {
         case '%':
             p++;
-            bvalue_append(&result, &PERCENT, 1);
+            bvalue_append_string(&result, &PERCENT, 1);
             break;
         case 'n':
             p++;
-            bvalue_append(&result, &NEWLINE, 1);
+            bvalue_append_string(&result, &NEWLINE, 1);
             break;
         case '{':
             p += 2;
@@ -248,7 +248,7 @@ struct bvalue* bvalue_format(struct bvalue* value, const char* format)
             struct bvalue* embed = bvalue_dictionary_get(value, key_name);
             free(key_name);
             if (embed && BVALUE_BYTESTRING == embed->type)
-                bvalue_append(&result, embed->value.bsvalue.data, embed->value.bsvalue.size);
+                bvalue_append_string(&result, embed->value.bsvalue.data, embed->value.bsvalue.size);
             p = end;
             break;
         default:
