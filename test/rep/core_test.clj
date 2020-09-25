@@ -60,6 +60,10 @@
   (fact "it can be given multiple times for one KEY"
     (rep "--print=value,1,<%{value}>" "--print=value,1,<<%{value}>>" "2") => (prints #"<2><<2>>")))
 
+(facts "about --no-print"
+  (fact "it can suppress a key"
+    (rep "--no-print=out" "(println 'whaat?)") => (prints "nil\n")))
+
 (facts "about sending additional fields"
   (rep "--op=rep-test-op" "--send=foo,string,quux") => (prints "foo=\"quux\";\"hello\"\n")
   (rep "--op=rep-test-op" "--send=bar,integer,42")  => (prints "bar=42;\"hello\"\n"))

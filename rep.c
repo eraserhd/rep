@@ -477,6 +477,22 @@ void append_print_option(struct print_option** options, struct print_option* new
     *options = new;
 }
 
+void remove_print_option(struct print_option** options, const char* key)
+{
+    while (*options)
+    {
+        if (!strcmp((*options)->key, key))
+        {
+            struct print_option* dead = *options;
+            *options = (*options)->next;
+            dead->next = NULL;
+            free_print_options(dead);
+        }
+        else
+            options = &(*options)->next;
+    }
+}
+
 struct print_option* make_default_print_options(void)
 {
     struct print_option* result = make_print_option("out,1,%{out}");
@@ -628,6 +644,7 @@ char* collect_code(int argc, char *argv[], int start)
 
 enum {
     OPT_OP = 127,
+    OPT_NO_PRINT,
     OPT_PRINT,
     OPT_SEND,
 };
@@ -639,6 +656,7 @@ const struct option LONG_OPTIONS[] =
     { "help",      0, NULL, 'h' },
     { "line",      1, NULL, 'l' },
     { "namespace", 1, NULL, 'n' },
+    { "no-print",  1, NULL, OPT_NO_PRINT },
     { "op",        1, NULL, OPT_OP },
     { "port",      1, NULL, 'p' },
     { "print",     1, NULL, OPT_PRINT },
@@ -753,6 +771,9 @@ struct options* parse_options(int argc, char* argv[])
         case OPT_OP:
             free(options->op);
             options->op = strdup(optarg);
+            break;
+        case OPT_NO_PRINT:
+            remove_print_option(&options->print, optarg);
             break;
         case OPT_PRINT:
             if (!have_print)
@@ -930,6 +951,7 @@ Options:\n\
   -h, --help                      Show this help screen.\n\
   -l, --line=[FILE:]LINE[:COLUMN] Set reference file, line, and column for errors.\n\
   -n, --namespace=NS              Evaluate code in NS (default: user).\n\
+  --no-print=KEY                  Suppress output for KEY.\n\
   --op=OP                         nREPL operation (default: eval).\n\
   -p, --port=ADDRESS              TCP port, host:port, @portfile, or @FNAME@RELATIVE.\n\
   --print=KEY|KEY,FD,FORMAT       Print FORMAT to FD when KEY is present.\n\
