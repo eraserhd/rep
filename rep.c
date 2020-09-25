@@ -242,9 +242,7 @@ struct bvalue* bvalue_format(struct bvalue* value, const char* format)
             const char* end = strchr(p, '}');
             if (!end)
                 fail("no closing brace in format");
-            char *key_name = (char*)malloc(end - p + 1);
-            memcpy(key_name, p, end - p);
-            key_name[end - p] = '\0';
+            char *key_name = strdup_up_to(p, '}');
             struct bvalue* embed = bvalue_dictionary_get(value, key_name);
             free(key_name);
             if (embed && BVALUE_BYTESTRING == embed->type)
