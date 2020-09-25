@@ -57,7 +57,9 @@ connection, meaning that thread-local variables and bindings like `*e` and
     specified and they are collected.  The defaults are `out,1,%{out}`,
     `err,2,%{err}`, and `value,1,%{value}%n`.  The first time *--print* is
     given on the command-line for KEY, any default formats for KEY are
-    removed.
+    removed.  List-valued keys can be printed with `%{key,SUBFORMAT}`, where
+    SUBFORMAT is evaluated for every element and `%.` refers to the current
+    element value.  If SUBFORMAT is not specified, `%.%n` is used.
 
 *--send*=KEY,TYPE,VALUE::
     Send KEY in request message with VALUE.  TYPE can be either `string` or
@@ -78,8 +80,9 @@ connection, meaning that thread-local variables and bindings like `*e` and
     namespace for the `-n` option.  `rep` will print `125`, which the editor
     can display in its echo area, log, scratch buffer, or what not.
 
-`rep --op=list-sessions --print=sessions`::
-    Print the list of the active nREPL sessions.
+`rep --op=list-sessions --print=sessions,1,%{sessions,var=%.;%n}`::
+    Print the list of the active nREPL sessions on each line, where each line
+    looks like `var=d041fed3-522f-4e7a-8da1-4b192eef0a24`.
 
 `rep --op=slurp --send=url,string,http://eraserhead.net/ --print=body`::
     Use CIDER's "slurp" operation to retrieve http://eraserhead.net/.
