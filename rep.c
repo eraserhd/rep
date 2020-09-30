@@ -515,6 +515,7 @@ struct options
     char* send;
     _Bool help;
     struct print_option* print;
+    _Bool verbose;
 };
 
 struct sockaddr_in options_address(struct options* options, const char* port);
@@ -650,7 +651,7 @@ enum {
 };
 
 
-const char SHORT_OPTIONS[] = "hl:n:p:";
+const char SHORT_OPTIONS[] = "hl:n:p:v";
 const struct option LONG_OPTIONS[] =
 {
     { "help",      0, NULL, 'h' },
@@ -661,6 +662,7 @@ const struct option LONG_OPTIONS[] =
     { "port",      1, NULL, 'p' },
     { "print",     1, NULL, OPT_PRINT },
     { "send",      1, NULL, OPT_SEND },
+    { "verbose",   0, NULL, 'v' },
     { NULL,        0, NULL, 0 }
 };
 
@@ -677,6 +679,7 @@ struct options* new_options(void)
     options->filename = NULL;
     options->send = strdup("");
     options->print = make_default_print_options();
+    options->verbose = false;
     return options;
 }
 
@@ -768,6 +771,9 @@ struct options* parse_options(int argc, char* argv[])
             free(options->port);
             options->port = strdup(optarg);
             break;
+        case 'v':
+            options->verbose = true;
+            break;
         case OPT_OP:
             free(options->op);
             options->op = strdup(optarg);
@@ -856,6 +862,13 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
     {
         struct bvalue* reply = breader_read(nrepl->decode);
 
+        if (nrepl->options->verbose)
+        {
+            printf("<< ");
+            bvalue_dump(reply, "<< ");
+            printf("\n");
+        }
+
         struct bvalue* new_session = bvalue_dictionary_get(reply, "new-session");
         if (new_session && BVALUE_BYTESTRING == new_session->type)
         {
@@ -896,6 +909,13 @@ void nrepl_send(struct nrepl* nrepl, const char* format, ...)
     va_start(vargs, format);
     vsnprintf(message, length+1, format, vargs);
     va_end(vargs);
+
+    if (nrepl->options->verbose)
+    {
+        printf(">> ");
+        fwrite(message, 1, length, stdout);
+        printf("\n");
+    }
 
     if (send(nrepl->fd, message, length, 0) != length)
         error("send");
@@ -956,6 +976,7 @@ Options:\n\
   -p, --port=ADDRESS              TCP port, host:port, @portfile, or @FNAME@RELATIVE.\n\
   --print=KEY|KEY,FD,FORMAT       Print FORMAT to FD when KEY is present.\n\
   --send=KEY,TYPE,VALUE           Send additional KEY of VALUE in request.\n\
+  -v, --verbose                   Show all messages sent and received.\n\
 \n");
 }
 

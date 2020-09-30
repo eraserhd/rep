@@ -13,6 +13,7 @@ https://github.com/eraserhd/rep/compare/v0.1.2...HEAD[Unreleased]
   default behavior.
 * List-valued replies can now be formatted using `%{KEY,SUBFORMAT}`
   syntax, and `%.` in SUBFORMAT refers to the current value.
+* `--verbose` option for debugging.
 
 https://github.com/eraserhd/rep/compare/v0.1.1...v0.1.2[v0.1.2]
 ----------------------------------------------------------------
