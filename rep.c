@@ -214,6 +214,25 @@ void bvalue_append_string(struct bvalue** value, const char* bytes, size_t lengt
     }
 }
 
+void bvalue_append_bvalue(struct bvalue** targetp, struct bvalue* value)
+{
+    char ivalue[64];
+    switch (value->type)
+    {
+    case BVALUE_INTEGER:
+        sprintf(ivalue, "%d", value->value.ivalue);
+        bvalue_append_string(targetp, ivalue, strlen(ivalue));
+        break;
+    case BVALUE_BYTESTRING:
+        bvalue_append_string(targetp, value->value.bsvalue.data, value->value.bsvalue.size);
+        break;
+    case BVALUE_LIST:
+    case BVALUE_DICTIONARY:
+        fail("unhandled case of bvalue_append_bvalue()");
+        break;
+    }
+}
+
 const char PERCENT = '%';
 const char NEWLINE = '\n';
 
@@ -238,8 +257,7 @@ void bvalue_append_format(struct bvalue** targetp, struct bvalue* value, const c
             break;
         case '.':
             p++;
-            if (value && BVALUE_BYTESTRING == value->type)
-                bvalue_append_string(targetp, value->value.bsvalue.data, value->value.bsvalue.size);
+            bvalue_append_bvalue(targetp, value);
             break;
         case '{':
             p += 2;
@@ -260,11 +278,16 @@ void bvalue_append_format(struct bvalue** targetp, struct bvalue* value, const c
             }
             struct bvalue* embed = bvalue_dictionary_get(value, key_name);
             free(key_name);
-            if (embed && BVALUE_BYTESTRING == embed->type)
-                bvalue_append_string(targetp, embed->value.bsvalue.data, embed->value.bsvalue.size);
-            if (embed && BVALUE_LIST == embed->type)
-                for (struct bvalue* i = embed; i; i = i->value.lvalue.tail)
-                    bvalue_append_format(targetp, i->value.lvalue.item, element_pattern);
+            if (embed)
+            {
+                if (BVALUE_LIST == embed->type)
+                {
+                    for (struct bvalue* i = embed; i; i = i->value.lvalue.tail)
+                        bvalue_append_format(targetp, i->value.lvalue.item, element_pattern);
+                }
+                else
+                    bvalue_append_bvalue(targetp, embed);
+            }
             free(element_pattern);
             p = end;
             break;
@@ -279,6 +302,52 @@ struct bvalue* bvalue_format(struct bvalue* value, const char* format)
     struct bvalue* result = allocate_bvalue_bytestring(128);
     bvalue_append_format(&result, value, format);
     return result;
+}
+
+
+void bvalue_dump(struct bvalue* value, const char* prefix)
+{
+    switch (value->type)
+    {
+    case BVALUE_BYTESTRING:
+        printf("\"%s\"", value->value.bsvalue.data);
+        break;
+    case BVALUE_INTEGER:
+        printf("%d", value->value.ivalue);
+        break;
+    case BVALUE_DICTIONARY:
+        {
+            printf("{");
+            char *new_prefix = (char*)malloc(strlen(prefix)+3);
+            strcpy(new_prefix, prefix);
+            strcat(new_prefix, "  ");
+            for (struct bvalue* iterator = value; iterator; iterator = iterator->value.dvalue.tail)
+            {
+                printf("\n%s", new_prefix);
+                bvalue_dump(iterator->value.dvalue.key, new_prefix);
+                printf(": ");
+                bvalue_dump(iterator->value.dvalue.value, new_prefix);
+            }
+            free(new_prefix);
+            printf("\n%s}", prefix);
+        }
+        break;
+    case BVALUE_LIST:
+        {
+            printf("[");
+            char *new_prefix = (char*)malloc(strlen(prefix)+3);
+            strcpy(new_prefix, prefix);
+            strcat(new_prefix, "  ");
+            for (struct bvalue* iterator = value; iterator; iterator = iterator->value.lvalue.tail)
+            {
+                printf("\n%s", new_prefix);
+                bvalue_dump(iterator->value.lvalue.item, new_prefix);
+            }
+            free(new_prefix);
+            printf("\n%s]", prefix);
+        }
+        break;
+    }
 }
 
 
