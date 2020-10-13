@@ -48,27 +48,6 @@ output.
 Running Tests
 -------------
 
-If you want to add a feature, please add tests.  The nicest way to start
-a REPL running tests is:
-
-....
-$ clj -A:test
-Clojure 1.10.0-master-SNAPSHOT
-user=> (use 'midje.repl)
-Run `(doc midje)` for Midje usage.
-Run `(doc midje-repl)` for descriptions of Midje repl functions.
-nil
-user=> (autotest)
-
-======================================================================
-Loading (rep.test-drivers rep.format-test rep.core-test)
-nil
-All checks (36) succeeded.
-[Completed at 22:56:48]
-true
-user=>
-....
-
 To run all the tests that CI runs, the way CI runs them (do this before
 issuing a pull request):
 
