@@ -10,13 +10,10 @@ stdenv.mkDerivation {
     asciidoc-full
   ];
 
-  installPhase = ''
-    mkdir -p $out/bin/ $out/share/man/man1/ $out/share/kak/autoload/plugins/
-    cp rep $out/bin/
-    cp rep.1 $out/share/man/man1/
-    substitute rc/rep.kak $out/share/kak/autoload/plugins/rep.kak \
-      --replace '$(rep' '$('"$out/bin/rep"
+  postPatch = ''
+    substituteInPlace rc/rep.kak --replace '$(rep' '$('"$out/bin/rep"
   '';
+  makeFlags = [ "prefix=${placeholder "out"}" ];
 
   meta = with stdenv.lib; {
     description = "Single-shot nREPL client";

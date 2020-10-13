@@ -1,4 +1,6 @@
 
+prefix	= /usr/local
+
 all: rep test rep.1
 
 rep: rep.c
@@ -12,7 +14,7 @@ test:
 
 .PHONY: install
 install:
-	mkdir -p ~/.config/kak/autoload/
-	for file in "$$(pwd)"/rc/*.kak; do \
-	  ln -sf "$${file}" ~/.config/kak/autoload/; \
-	done
+	mkdir -p $(prefix)/bin/ $(prefix)/share/man/man1/ $(prefix)/share/kak/autoload/plugins/
+	cp rep $(prefix)/bin/
+	cp rep.1 $(prefix)/share/man/man1/
+	cp rc/rep.kak $(prefix)/share/kak/autoload/plugins/rep.kak

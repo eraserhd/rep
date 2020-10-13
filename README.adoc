@@ -23,8 +23,9 @@ other limitations because of this?
 Installation
 ------------
 
-Download the latest Linux or MacOS binaries from the GitHub releases tab
-above.
+....
+$ make && sudo make install
+....
 
 Usage, Options, and Examples
 ----------------------------
@@ -59,10 +60,11 @@ Using with Kakoune
 ------------------
 
 The `rc/` folder contains scripts which add a `,e` user mode to Kakoune.  To
-link this to Kakoiune's autoload directory, do the following:
+link this to Kakoune's autoload directory, do the following:
 
 ....
-$ make install
+$ make && make install
+$ ln -sf /usr/local/share/kak/autoload/plugins/rep.kak ~/.config/kak/autoload/
 ....
 
 `rep` must be in the path for the plugin to work.
