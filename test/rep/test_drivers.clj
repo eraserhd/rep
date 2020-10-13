@@ -39,7 +39,7 @@
                       (format "bar=%s;" (pr-str bar))
                       "")
                     (pr-str "hello"))]
-        (t/send transport (response-for message :status :done :value value)))
+        (t/send transport (response-for message :status :done :value value :intvalue 67)))
       (f message))))
 
 (def ^:private handler

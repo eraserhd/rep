@@ -58,7 +58,9 @@
   (fact "it can print to stderr"
     (rep "--print=value,2,>%{value}<" "(+ 1 1)") => (prints ">2<" :to-stderr))
   (fact "it can be given multiple times for one KEY"
-    (rep "--print=value,1,<%{value}>" "--print=value,1,<<%{value}>>" "2") => (prints #"<2><<2>>")))
+    (rep "--print=value,1,<%{value}>" "--print=value,1,<<%{value}>>" "2") => (prints #"<2><<2>>"))
+  (fact "it can print integral values"
+    (rep "--print=intvalue,1,<%{intvalue}>" "--op=rep-test-op") => (prints #"<67>")))
 
 (facts "about --no-print"
   (fact "it can suppress a key"
