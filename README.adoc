@@ -32,12 +32,10 @@ Usage, Options, and Examples
 
 See https://github.com/eraserhd/rep/blob/develop/rep.1.adoc[the rep manpage].
 
-Building
---------
+Building with Nix
+-----------------
 
-https://nixos.org/nix/download.html[Nix] is the build tool. Weird, yes, but
-this project has a brittle set of peculiar dependencies and Nix allows us to
-pin down _everything_.
+You can use https://nixos.org/nix/download.html[Nix] as the build tool.
 
 ....
 $ nix-build .
