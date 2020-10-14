@@ -1,4 +1,4 @@
-{ stdenv, pkgs, asciidoc-full, ... }:
+{ stdenv, fetchFromGitHub, asciidoc-full }:
 
 stdenv.mkDerivation {
   pname = "rep";
@@ -17,7 +17,7 @@ stdenv.mkDerivation {
 
   meta = with stdenv.lib; {
     description = "Single-shot nREPL client";
-    homepage = https://github.com/eraserhd/rep;
+    homepage = "https://github.com/eraserhd/rep";
     license = licenses.epl10;
     platforms = platforms.all;
     maintainers = [ maintainers.eraserhd ];
