@@ -11,7 +11,7 @@ stdenv.mkDerivation rec {
     sha256 = "";
   };
 
-  buildInputs = [
+  nativeBuildInputs = [
     asciidoc-full
   ];
 
