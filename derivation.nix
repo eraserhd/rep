@@ -1,10 +1,15 @@
 { stdenv, fetchFromGitHub, asciidoc-full }:
 
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   pname = "rep";
   version = "0.2.0";
 
-  src = ./.;
+  src = fetchFromGitHub {
+    owner = "eraserhd";
+    repo = pname;
+    rev = "v${version}";
+    sha256 = "";
+  };
 
   buildInputs = [
     asciidoc-full
