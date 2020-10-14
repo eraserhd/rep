@@ -18,7 +18,7 @@ stdenv.mkDerivation rec {
   postPatch = ''
     substituteInPlace rc/rep.kak --replace '$(rep' '$('"$out/bin/rep"
   '';
-  makeFlags = [ "prefix=${placeholder "out"}" ];
+  makeFlags = [ "prefix=$(out)" ];
 
   meta = with stdenv.lib; {
     description = "Single-shot nREPL client";
