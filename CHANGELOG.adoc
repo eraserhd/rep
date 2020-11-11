@@ -4,6 +4,10 @@ Change Log
 https://github.com/eraserhd/rep/compare/v0.2.1...HEAD[Unreleased]
 -----------------------------------------------------------------
 
+=== Kakoune
+
+* Fix issue preventing evaluation of code in the correct namespace.
+
 https://github.com/eraserhd/rep/compare/v0.2.0...v0.2.1[v0.2.1]
 ---------------------------------------------------------------
 

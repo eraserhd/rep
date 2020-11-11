@@ -92,7 +92,7 @@ define-command \
 define-command \
     -docstring %{rep-replace-selection: Evaluate selection and replace with result.} \
     rep-replace-selection %{
-    rep-evaluate-selection -namespace user
+    rep-evaluate-selection %arg{@}
     evaluate-commands -save-regs r %{
         set-register r "%opt{rep_evaluate_output}"
         execute-keys '"rR'
