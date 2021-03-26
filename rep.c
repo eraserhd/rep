@@ -738,7 +738,7 @@ const struct option LONG_OPTIONS[] =
 struct options* new_options(void)
 {
     struct options* options = (struct options*)malloc(sizeof(struct options));
-    options->port = strdup("@.nrepl-port");
+    options->port = strdup("@.nrepl-port@.");
     options->op = strdup("eval");
     options->namespace = strdup("user");
     options->code = NULL;
