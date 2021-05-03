@@ -9,7 +9,8 @@
   (rep "(println 'hello)")                         => (prints "hello\nnil\n")
   (rep "(.write ^java.io.Writer *err* \"error\")") => (prints "error" :to-stderr)
   (rep "(throw (ex-info \"x\" {}))")               => (prints #"ExceptionInfo" :to-stderr)
-  (rep "(throw (ex-info \"x\" {}))")               => (exits-with 1))
+  (rep "(throw (ex-info \"x\" {}))")               => (exits-with 1)
+  (rep "-n" "ns.does.not.exist" "(+ 1 1)")         => (exits-with 1))
 
 (facts "about help"
   (rep "-h")     => (prints #"rep: Single-shot nREPL client")

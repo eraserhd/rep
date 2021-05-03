@@ -962,6 +962,9 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
         struct bvalue* status = bvalue_dictionary_get(reply, "status");
         if (bvalue_equals_string(status, "done") || bvalue_list_contains_string(status, "done"))
             done = true;
+        if (bvalue_equals_string(status, "error") || bvalue_list_contains_string(status, "error"))
+            nrepl->exception_occurred = true;
+
         free_bvalue(reply);
     }
 }
