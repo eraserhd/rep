@@ -188,6 +188,18 @@ _Bool bvalue_list_contains_string(struct bvalue* list, const char* s)
     return false;
 }
 
+_Bool bvalue_has_status(struct bvalue* reply, const char* status_text)
+{
+    struct bvalue* status = bvalue_dictionary_get(reply, "status");
+    if (!status)
+        return false;
+    if (bvalue_equals_string(status, status_text))
+        return true;
+    if (bvalue_list_contains_string(status, status_text))
+        return true;
+    return false;
+}
+
 void bvalue_append_string(struct bvalue** value, const char* bytes, size_t length)
 {
     if (0 == length)
@@ -959,12 +971,11 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
         if (ex)
             nrepl->exception_occurred = true;
 
-        struct bvalue* status = bvalue_dictionary_get(reply, "status");
-        if (bvalue_equals_string(status, "done") || bvalue_list_contains_string(status, "done"))
+        if (bvalue_has_status(reply, "done"))
             done = true;
-        if (bvalue_equals_string(status, "error") || bvalue_list_contains_string(status, "error"))
+        if (bvalue_has_status(reply, "error"))
             nrepl->exception_occurred = true;
-        if (bvalue_equals_string(status, "namespace-not-found") || bvalue_list_contains_string(status, "namespace-not-found"))
+        if (bvalue_has_status(reply, "namespace-not-found"))
         {
             static const char MESSAGE[] = "the namespace does not exist\n";
             write(2, MESSAGE, strlen(MESSAGE));
