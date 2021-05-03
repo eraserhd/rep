@@ -10,6 +10,8 @@ https://github.com/eraserhd/rep/compare/v0.2.1...HEAD[Unreleased]
   changed (#7).
 * Exit with error on "status" of "error", even if no exception was thrown
   (#9).
+* An informative error is printed to stderr if a `namespace-not-found` status
+  is seen (#9).
 
 === Kakoune
 

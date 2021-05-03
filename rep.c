@@ -964,6 +964,11 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
             done = true;
         if (bvalue_equals_string(status, "error") || bvalue_list_contains_string(status, "error"))
             nrepl->exception_occurred = true;
+        if (bvalue_equals_string(status, "namespace-not-found") || bvalue_list_contains_string(status, "namespace-not-found"))
+        {
+            static const char MESSAGE[] = "the namespace does not exist\n";
+            write(2, MESSAGE, strlen(MESSAGE));
+        }
 
         free_bvalue(reply);
     }

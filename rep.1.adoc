@@ -105,3 +105,8 @@ connection, meaning that thread-local variables and bindings like `*e` and
 
 *255*::
     Some other kind of exception occurred during processing.
+
+== BUGS
+
+Some errors, such as `namespace-not-found` aren't reported as exceptions, and
+rep currently cannot suppress or change their formatting.
