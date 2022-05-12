@@ -28,7 +28,7 @@
             in pkgs.stdenv.mkDerivation {
               name = "rep-unit-tests";
               src = ./.;
-              buildInputs = with pkgs; [ rep jdk ];
+              buildInputs = with pkgs; [ rep jdk17_headless ];
               CLASSPATH = java-deps.makeClasspaths { extraClasspaths = [ "test" "src" ]; };
               REP_TEST_DRIVER = "native";
               REP_TO_TEST = "${rep}/bin/rep";
