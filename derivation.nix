@@ -1,15 +1,10 @@
-{ stdenv, lib, fetchFromGitHub, asciidoc-full }:
+{ stdenv, lib, asciidoc-full }:
 
 stdenv.mkDerivation rec {
   pname = "rep";
   version = "0.2.2";
 
-  src = fetchFromGitHub {
-    owner = "eraserhd";
-    repo = pname;
-    rev = "v${version}";
-    sha256 = "";
-  };
+  src = ./.;
 
   nativeBuildInputs = [
     asciidoc-full
