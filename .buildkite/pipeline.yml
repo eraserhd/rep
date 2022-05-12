@@ -3,4 +3,4 @@ steps:
     plugins:
       - docker#v3.9.0:
           image: nixos/nix
-          run: nix flake check
+          command: ["nix", "flake", "check"]
