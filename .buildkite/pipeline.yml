@@ -3,4 +3,8 @@ steps:
     plugins:
       - docker#v3.9.0:
           image: nixos/nix
-          command: ["nix", "--experimental-features", "nix-command flakes", "flake", "check"]
+          command:
+            - "/bin/sh"
+            - "-ec"
+            - |
+                nix --experimental-features 'nix-command flakes' flake check
