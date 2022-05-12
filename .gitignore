@@ -16,3 +16,4 @@ pom.xml.asc
 /rep
 /rep.1
 *.dSYM
+/.direnv
