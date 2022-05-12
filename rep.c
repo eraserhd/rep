@@ -660,7 +660,8 @@ char* make_path_absolute(const char* path)
     if (*path == '/')
         return strdup(path);
     char* absolute_directory = (char*)malloc(strlen(path) + PATH_MAX + 2);
-    getcwd(absolute_directory, PATH_MAX);
+    if (NULL == getcwd(absolute_directory, PATH_MAX))
+        error("getcwd");
     strcat(absolute_directory, "/");
     strcat(absolute_directory, path);
     return absolute_directory;
@@ -963,7 +964,7 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
             if (NULL == bvalue_dictionary_get(reply, print->key))
                 continue;
             struct bvalue* s = bvalue_format(reply, print->format);
-            write(print->fd, s->value.bsvalue.data, s->value.bsvalue.size);
+            (void)write(print->fd, s->value.bsvalue.data, s->value.bsvalue.size);
             free_bvalue(s);
         }
 
@@ -978,7 +979,7 @@ void nrepl_receive_until_done(struct nrepl* nrepl)
         if (bvalue_has_status(reply, "namespace-not-found"))
         {
             static const char MESSAGE[] = "the namespace does not exist\n";
-            write(2, MESSAGE, strlen(MESSAGE));
+            (void)write(2, MESSAGE, strlen(MESSAGE));
         }
 
         free_bvalue(reply);
