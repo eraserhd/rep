@@ -1,0 +1,35 @@
+# Code
+*.c text
+*.clj text
+
+# Documentation
+*.adoc text
+LICENSE text
+
+# Config formats
+*.edn
+*.json text
+*.kak text
+*.lock text
+*.nix text
+*.yaml text
+*.yml text
+.envrc text
+Makefile text
+.gitignore text
+
+# Objects
+*.lib binary
+*.exe binary
+*.dll binary
+*.o binary
+*.a binary
+*.so binary
+
+#
+# Exclude files from exporting
+#
+
+.gitattributes export-ignore
+.gitignore     export-ignore
+.gitkeep       export-ignore

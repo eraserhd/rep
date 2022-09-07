@@ -1,15 +1,23 @@
-#include <alloca.h>
 #include <ctype.h>
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __unix__
+#include <alloca.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#elif defined(_WIN32) || defined(WIN32)
+#include <malloc.h>
+#include <winsock2.h>
+#include <winsock.h>
+#include <ws2tcpip.h>
+#endif
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdarg.h>
 #include <unistd.h>
 #include <libgen.h>
@@ -628,10 +636,18 @@ struct sockaddr_in options_address_from_relative_file(struct options* options, c
     char *directory = strdup(directory_in);
     for (;;)
     {
+#ifdef __unix__
         struct stat statb;
+#elif defined(_WIN32) || defined(WIN32)
+        struct _stat statb;
+#endif
         char* path_to_check = (char*)malloc(strlen(directory) + strlen(filename) + 2);
         sprintf(path_to_check, "%s/%s", directory, filename);
+#ifdef __unix__
         if (0 == stat(path_to_check, &statb))
+#elif defined(_WIN32) || defined(WIN32)
+        if (0 == _stat(path_to_check, &statb))
+#endif
         {
             struct sockaddr_in result = options_address_from_file(options, path_to_check);
             free(path_to_check);
@@ -690,7 +706,15 @@ struct sockaddr_in options_address(struct options* options, const char* port)
     if (strchr(port, ':'))
     {
         char *host_part = strdup_up_to(port, ':');
+#ifdef __unix__
         if (!inet_aton(host_part, &address.sin_addr))
+#elif defined(_WIN32) || defined(WIN32)
+        size_t hostl = strlen(host_part) + 1;
+        wchar_t *whost = calloc(sizeof(wchar_t), hostl);
+        mbstowcs(whost, host_part, hostl);
+        LPCWSTR whost_part = whost;
+        if (!InetPtonW(AF_INET, whost_part, &address.sin_addr))
+#endif
         {
             struct hostent *ent = gethostbyname(host_part);
             if (NULL == ent)
@@ -703,6 +727,10 @@ struct sockaddr_in options_address(struct options* options, const char* port)
             address.sin_addr.s_addr = *(u_long *)ent->h_addr_list[0];
         }
         free(host_part);
+#if defined(_WIN32) || defined(WIN32)
+        whost_part = NULL;
+        free(whost);
+#endif
         port = strchr(port, ':') + 1;
     }
     address.sin_port = htons(atoi(port));
@@ -1071,6 +1099,14 @@ Options:\n\
 
 int main(int argc, char *argv[])
 {
+#if defined(_WIN32) || defined(WIN32)
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) {
+        printf("Error starting up windows sockets: %d", WSAGetLastError());
+        return 1;
+    }
+#endif
+
     struct options* options = parse_options(argc, argv);
     if (options->help)
     {
