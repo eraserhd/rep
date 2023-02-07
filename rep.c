@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef __unix__
+#if defined(__unix__) || defined(__APPLE__)
 #include <alloca.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
