@@ -16,7 +16,12 @@
           };
         });
 
-      checkSystems = ["x86_64-darwin" "x86_64-linux"];
+      checkSystems = [
+        "aarch64-darwin"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "x86_64-linux"
+      ];
       checkOutputs = flake-utils.lib.eachSystem checkSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};

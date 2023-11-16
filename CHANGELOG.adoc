@@ -4,6 +4,9 @@ Change Log
 https://github.com/eraserhd/rep/compare/v0.2.2...HEAD[Unreleased]
 -----------------------------------------------------------------
 
+* Support for Mingw
+* Test on aarch64-darwin and aarch64-linux
+
 https://github.com/eraserhd/rep/compare/v0.2.1...v0.2.2[v0.2.2]
 ---------------------------------------------------------------
 
