@@ -23,8 +23,16 @@ other limitations because of this?
 Installation
 ------------
 
+On Unix-like systems:
+
 ....
 $ make && sudo make install
+....
+
+On Windows, this can be built with Mingw:
+
+....
+> mingw32-make.exe
 ....
 
 Usage, Options, and Examples
