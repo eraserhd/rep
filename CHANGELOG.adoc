@@ -12,8 +12,12 @@ https://github.com/eraserhd/rep/compare/v0.2.2...v0.2.3[v0.2.3]
 
 === Added
 
-* `-S`, `--session-initl` allows session initialization code which can do things
+* `-S`, `--session-init` allows session initialization code which can do things
   like connect to a Piggieback REPL.
+
+=== Kakoune
+
+* New `rep_extra_options` option to pass other options when invoking `rep`.
 
 https://github.com/eraserhd/rep/compare/v0.2.1...v0.2.2[v0.2.2]
 ---------------------------------------------------------------
