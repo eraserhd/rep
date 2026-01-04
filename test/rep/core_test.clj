@@ -75,8 +75,10 @@
 (facts "about the examples in the documentation"
   (rep "--op=ls-sessions" "--print=sessions,1,%{sessions,session=%.%n;}") => (prints #"^session=[a-fA-F0-9]{6}"))
 
-(facts "about pre-eval code"
-  (rep "--pre-eval=42" "(+ 2 2)")     => (prints "4\n")
-  (rep "--pre-eval=42" "(+ 2 2)")     => (exits-with 0)
-  (rep "--pre-eval=blergh" "(+ 2 2)") => (prints #"Unable to resolve symbol: blergh" :to-stderr)
-  (rep "--pre-eval=blergh" "(+ 2 2)") => (exits-with 1))
+(facts "about session initialization code"
+  (rep "--session-init=42" "(+ 2 2)")     => (prints "4\n")
+  (rep "--session-init=42" "(+ 2 2)")     => (exits-with 0)
+  (rep "-S" "42" "(+ 2 2)")               => (prints "4\n")
+  (rep "-S" "42" "(+ 2 2)")               => (exits-with 0)
+  (rep "--session-init=blergh" "(+ 2 2)") => (prints #"Unable to resolve symbol: blergh" :to-stderr)
+  (rep "--session-init=blergh" "(+ 2 2)") => (exits-with 1))

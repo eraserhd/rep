@@ -49,12 +49,6 @@ connection, meaning that thread-local variables and bindings like `*e` and
     contains 'FNAME' and reads that file. The default is '@.nrepl-port@.',
     which will find the running nREPL if it was invoked by Leiningen.
 
-*-P, --pre-eval*=CODE::
-    CODE is evaluated in the new session before the main operation, and
-    output (except errors) is discarded.  This is useful to connect to
-    ClojureScript REPLs, for example
-    `--pre-eval='(cider.piggieback/cljs-repl :app)'`.
-
 *--print*=KEY[,FD[,FORMAT]]::
     Print response messages with KEY in them to FD, using FORMAT.  In FORMAT,
     `%{key}` prints *key* from the response message, `%%` prints a literal
@@ -70,6 +64,12 @@ connection, meaning that thread-local variables and bindings like `*e` and
 *--send*=KEY,TYPE,VALUE::
     Send KEY in request message with VALUE.  TYPE can be either `string` or
     `integer`.
+
+*-S, --session-init*=CODE::
+    CODE is evaluated in the new session before the main operation, and
+    output (except errors) is discarded.  This is useful to connect to
+    ClojureScript REPLs, for example
+    `--session-init='(cider.piggieback/cljs-repl :app)'`.
 
 *-v, --verbose*::
     Dump all messages sent and received.

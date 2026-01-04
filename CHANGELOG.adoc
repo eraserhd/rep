@@ -12,7 +12,7 @@ https://github.com/eraserhd/rep/compare/v0.2.2...v0.2.3[v0.2.3]
 
 === Added
 
-* `-P`, `--pre-eval` allows session initialization code which can do things
+* `-S`, `--session-initl` allows session initialization code which can do things
   like connect to a Piggieback REPL.
 
 https://github.com/eraserhd/rep/compare/v0.2.1...v0.2.2[v0.2.2]
