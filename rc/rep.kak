@@ -1,6 +1,6 @@
 declare-option -hidden str rep_evaluate_output
 declare-option -hidden str rep_namespace
-declare-option -hidden str rep_extra_options
+declare-option str rep_extra_options
 
 define-command -hidden rep-find-namespace %{
     evaluate-commands -draft %{
