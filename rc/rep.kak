@@ -1,5 +1,6 @@
 declare-option -hidden str rep_evaluate_output
 declare-option -hidden str rep_namespace
+declare-option -hidden str rep_extra_options
 
 define-command -hidden rep-find-namespace %{
     evaluate-commands -draft %{
@@ -67,6 +68,9 @@ Switches:
                 add_port
                 add_file_line_and_column
                 add_namespace "$@"
+                if [ -n "$kak_opt_rep_extra_options" ]; then
+                    rep_command="$rep_command $kak_opt_rep_extra_options"
+                fi
                 rep_command="$rep_command"' -- "$kak_selection" 2>"$error_file" |sed -e "s/'"'"'/'"''"'/g")'
                 eval "$rep_command"
                 error=$(sed "s/'/''/g" <"$error_file")
