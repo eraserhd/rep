@@ -762,7 +762,7 @@ enum {
 };
 
 
-const char SHORT_OPTIONS[] = "hi:l:n:p:v";
+const char SHORT_OPTIONS[] = "hl:n:p:P:v";
 const struct option LONG_OPTIONS[] =
 {
     { "help",      0, NULL, 'h' },
