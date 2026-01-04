@@ -15,6 +15,11 @@ $ rep '(clojure.tools.namespace.repl/refresh)'
 :ok
 ....
 
+....
+$ rep -P '(cider.piggieback/cljs-repl :app)' '(.clear js/localStorage)'
+nil
+....
+
 Unlike other nREPL clients, `rep` does not try to maintain a persistent
 connection, meaning that thread-local variables and bindings like `*e` and
 `*1` will not persist across invocations of `rep`.  Perhaps there are

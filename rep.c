@@ -605,6 +605,7 @@ struct options
     _Bool help;
     struct print_option* print;
     _Bool verbose;
+    char* pre_eval;
 };
 
 struct sockaddr_in options_address(struct options* options, const char* port);
@@ -761,7 +762,7 @@ enum {
 };
 
 
-const char SHORT_OPTIONS[] = "hl:n:p:v";
+const char SHORT_OPTIONS[] = "hi:l:n:p:v";
 const struct option LONG_OPTIONS[] =
 {
     { "help",      0, NULL, 'h' },
@@ -770,6 +771,7 @@ const struct option LONG_OPTIONS[] =
     { "no-print",  1, NULL, OPT_NO_PRINT },
     { "op",        1, NULL, OPT_OP },
     { "port",      1, NULL, 'p' },
+    { "pre-eval",  1, NULL, 'P' },
     { "print",     1, NULL, OPT_PRINT },
     { "send",      1, NULL, OPT_SEND },
     { "verbose",   0, NULL, 'v' },
@@ -790,6 +792,7 @@ struct options* new_options(void)
     options->send = strdup("");
     options->print = make_default_print_options();
     options->verbose = false;
+    options->pre_eval = NULL;
     return options;
 }
 
@@ -881,6 +884,11 @@ struct options* parse_options(int argc, char* argv[])
             free(options->port);
             options->port = strdup(optarg);
             break;
+        case 'P':
+            if (options->pre_eval)
+                free(options->pre_eval);
+            options->pre_eval = strdup(optarg);
+            break;
         case 'v':
             options->verbose = true;
             break;
@@ -926,6 +934,8 @@ void free_options(struct options* options)
     if (options->send)
         free(options->send);
     free_print_options(options->print);
+    if (options->pre_eval)
+        free(options->pre_eval);
     free(options);
 }
 
@@ -1052,6 +1062,22 @@ int nrepl_exec(struct nrepl* nrepl)
 
     nrepl_send(nrepl, "d2:op5:clonee");
 
+    if (nrepl->options->pre_eval)
+    {
+        struct print_option *original_print = nrepl->options->print;
+        nrepl->options->print = make_print_option("err,2,%{err}");
+
+        nrepl_send(nrepl, "d2:op4:eval7:session%lu:%s4:code%lu:%se",
+            strlen(nrepl->session), nrepl->session,
+            strlen(nrepl->options->pre_eval), nrepl->options->pre_eval);
+
+        free_print_options(nrepl->options->print);
+        nrepl->options->print = original_print;
+
+        if (nrepl->exception_occurred)
+            return 1;
+    }
+
     char extra_options[512] = "";
     if (nrepl->options->line != -1)
         sprintf(extra_options + strlen(extra_options), "4:linei%de", nrepl->options->line);
@@ -1091,6 +1117,7 @@ Options:\n\
   --no-print=KEY                  Suppress output for KEY.\n\
   --op=OP                         nREPL operation (default: eval).\n\
   -p, --port=ADDRESS              TCP port, host:port, @portfile, or @FNAME@RELATIVE.\n\
+  -P, --pre-eval=CODE             Evaluated first, e.g. (cider.piggieback/cljs-repl :app).\n\
   --print=KEY|KEY,FD,FORMAT       Print FORMAT to FD when KEY is present.\n\
   --send=KEY,TYPE,VALUE           Send additional KEY of VALUE in request.\n\
   -v, --verbose                   Show all messages sent and received.\n\
