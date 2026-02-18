@@ -29,7 +29,7 @@ Switches:
         set-option global rep_evaluate_output ''
         try %{ rep-find-namespace }
         evaluate-commands -itersel -draft %{
-            evaluate-commands %sh{
+            evaluate-commands -save-regs i %sh{
                 add_port() {
                     if [ -n "$kak_buffile" ]; then
                         rep_command="$rep_command --port=\"@.nrepl-port@$kak_buffile\""
@@ -72,10 +72,19 @@ Switches:
                     rep_command="$rep_command $kak_opt_rep_extra_options"
                 fi
                 rep_command="$rep_command"' -- "$kak_selection" 2>"$error_file" |sed -e "s/'"'"'/'"''"'/g")'
+                printf 'set-register i '"'$ns"'=> '
+                printf %s "$kak_selection" |sed -e "s/'/''/g"
+                printf "'"'\n'
+                printf 'evaluate-commands -draft %%{edit -scratch *rep*}\n'
+                printf 'execute-keys -buffer *rep* "gjo<c-r>i<esc>"\n'
                 eval "$rep_command"
                 error=$(sed "s/'/''/g" <"$error_file")
                 rm -f "$error_file"
                 printf "set-option -add global rep_evaluate_output '%s'\n" "$value"
+                printf 'set-register i '"'"
+                printf %s%s\\n "$value" "$error"
+                printf "'"'\n'
+                printf 'execute-keys -buffer *rep* "gjo<c-r>i<esc>"\n'
                 [ -n "$error" ] && printf "fail '%s'\n" "$error"
             }
         }

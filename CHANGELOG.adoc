@@ -4,6 +4,10 @@ Change Log
 https://github.com/eraserhd/rep/compare/v0.2.3...HEAD[Unreleased]
 -----------------------------------------------------------------
 
+=== Kakoune
+
+* Expressions and results are recorded in a `*rep*` buffer.
+
 https://github.com/eraserhd/rep/compare/v0.2.2...v0.2.3[v0.2.3]
 ---------------------------------------------------------------
 
